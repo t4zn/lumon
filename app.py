@@ -18,6 +18,12 @@ from together import Together
 
 # Load environment variables
 load_dotenv()
+from dotenv import load_dotenv
+import google.generativeai as genai
+from together import Together
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -209,20 +215,19 @@ def identify_plant_with_plantnet(image_path):
             logging.warning("PlantNet API key not available, falling back to local identification")
             return identify_plant_local(image_path)
         
-        # PlantNet API endpoint - using world flora project for better coverage
-        url = f"https://my-api.plantnet.org/v1/identify/the-plant-list?api-key={PLANTNET_API_KEY}"
+        # PlantNet API endpoint
+        url = "https://my-api.plantnet.org/v1/identify/weurope"
         
-        # Prepare the image file with timeout
+        # Prepare the image file
         with open(image_path, 'rb') as image_file:
             files = {
-                'images': ('image.jpg', image_file, 'image/jpeg')
-            }
-            data = {
-                'modifiers': 'flower'  # Specify plant part
+                'images': image_file,
+                'modifiers': (None, 'flower'),  # You can specify plant part
+                'api-key': (None, PLANTNET_API_KEY)
             }
             
-            # Make API request with strict timeout
-            response = requests.post(url, files=files, data=data, timeout=15)
+            # Make API request
+            response = requests.post(url, files=files)
             
             if response.status_code == 200:
                 data = response.json()
@@ -348,7 +353,6 @@ def identify_plant_local(image_path):
                 special_features.append('woody_plant')
             
             # Image composition analysis
-            aspect_ratio = width / height if height > 0 else 1.0
             if width > height * 1.3:
                 special_features.append('landscape_view')
             if aspect_ratio < 0.7:
@@ -467,6 +471,7 @@ def identify_plant_local(image_path):
             }
             
             # Enhanced analysis with shape and texture detection
+            aspect_ratio = width / height if height > 0 else 1.0
             brightness = sum(r + g + b for r, g, b in pixels[:1000]) / (3000 * 255)
             
             # Priority-based plant identification
