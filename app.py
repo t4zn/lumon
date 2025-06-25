@@ -18,12 +18,6 @@ from together import Together
 
 # Load environment variables
 load_dotenv()
-from dotenv import load_dotenv
-import google.generativeai as genai
-from together import Together
-
-# Load environment variables
-load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
