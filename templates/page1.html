@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flora - Page 1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div class="page-container">
+        <div class="floating-elements-3d"></div>
+        
+        <!-- Back arrow button -->
+        <button class="back-btn" onclick="navigateToPage0()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        
+        <div class="content-wrapper">
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Placeholder buttons arranged vertically -->
+                <div class="button-list">
+                    <button class="placeholder-btn"></button>
+                    <button class="placeholder-btn"></button>
+                    <button class="placeholder-btn"></button>
+                </div>
+                
+                <!-- Active navigation button -->
+                <div class="navigation-buttons centered">
+                    <button class="nav-btn active-btn" onclick="navigateToApp()">
+                        <span class="btn-text">2</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
+    <script>
+        function navigateToApp() {
+            transitionToPage('/app');
+        }
+        
+        function navigateToPage0() {
+            transitionToPage('/page0');
+        }
+        
+        function transitionToPage(url) {
+            document.querySelector('.page-container').style.transform = 'scale(0.9)';
+            document.querySelector('.page-container').style.opacity = '0';
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 300);
+        }
+    </script>
+</body>
+</html>
