@@ -1,0 +1,15 @@
+{
+  "name": "flora-app",
+  "version": "1.0.0",
+  "description": "Flora AI Plant Expert",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'Build complete'",
+    "serve": "python -m http.server 8000"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/cli": "^5.0.0"
+  }
+}

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#10b981">
+    <title>Flora - AI Plant Expert</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    
+    <!-- App Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+</head>
+<body>
+    <!-- 3D Background Canvas -->
+    <canvas id="landing-canvas"></canvas>
+    
+    <!-- Floating 3D Elements -->
+    <div class="floating-elements">
+        <div class="float-leaf leaf-1"></div>
+        <div class="float-leaf leaf-2"></div>
+        <div class="float-leaf leaf-3"></div>
+        <div class="float-leaf leaf-4"></div>
+        <div class="float-pollen pollen-1"></div>
+        <div class="float-pollen pollen-2"></div>
+        <div class="float-pollen pollen-3"></div>
+        <div class="float-stem stem-1"></div>
+        <div class="float-stem stem-2"></div>
+    </div>
+
+    <!-- Main Landing Content -->
+    <div class="landing-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="hero-content">
+                <div class="logo-container">
+                    <div class="logo-3d">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="logo-glow"></div>
+                </div>
+                
+                <h1 class="hero-title">
+                    <span class="title-word">Flora</span>
+                    <span class="title-by-taizun">by Taizun</span>
+                    <span class="title-subtitle">AI Plant Expert</span>
+                </h1>
+                
+                <p class="hero-description">
+                    Discover, identify, and care for plants with advanced AI technology. 
+                    Your personal botanical companion powered by cutting-edge machine learning.
+                </p>
+                
+                <div class="feature-highlights">
+                    <div class="feature-item">
+                        <i class="fas fa-camera"></i>
+                        <span>Instant ID</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-brain"></i>
+                        <span>Expert AI</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-leaf"></i>
+                        <span>Care Tips</span>
+                    </div>
+                </div>
+                
+                <button class="start-btn" id="start-btn" onclick="enterApp()">
+                    <span class="btn-text">Start Exploring</span>
+                    <i class="fas fa-arrow-right btn-icon"></i>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="features-section">
+            <div class="feature-card">
+                <div class="card-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Plant Identification</h3>
+                <p>Advanced AI analyzes your photos to identify plants with scientific accuracy</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="card-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Botanical Chat</h3>
+                <p>Ask questions and get expert advice about plant care, diseases, and growth</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="card-icon">
+                    <i class="fas fa-spa"></i>
+                </div>
+                <h3>Care Guidance</h3>
+                <p>Personalized care instructions and tips for healthy plant growth</p>
+            </div>
+        </div>
+        
+        <!-- Developer Credit -->
+        <div class="developer-credit">
+            <p>Developed by <span class="developer-name">Taizun</span></p>
+        </div>
+    </div>
+    
+    <!-- Particle Systems -->
+    <div class="particle-system" id="particle-system"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="{{ url_for('static', filename='landing_fixed.js') }}"></script>
+    
+    <!-- PWA Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then((registration) => {
+                        console.log('Flora: SW registered', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('Flora: SW registration failed', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
