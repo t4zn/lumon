@@ -1199,6 +1199,21 @@ def get_plant_care_advice(plant_name):
     else:
         return ["Provide appropriate light for species", "Water when topsoil feels dry", "Ensure good drainage", "Feed during growing season"]
 
+@app.route('/page0')
+def page0():
+    """Page 0 - Navigation hub"""
+    return render_template('page0.html')
+
+@app.route('/page1')
+def page1():
+    """Page 1"""
+    return render_template('page1.html')
+
+@app.route('/page2') 
+def page2():
+    """Page 2"""
+    return render_template('page2.html')
+
 @app.route('/download')
 def download_page():
     """APK download page"""
