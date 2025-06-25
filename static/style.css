@@ -856,12 +856,14 @@ html, body {
     background: var(--bg-secondary);
     border-top: 1px solid var(--border-color);
     padding: var(--spacing-md);
-    position: relative;
-    /* Fix mobile chat bar cutting - ensure proper safe area */
-    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 20px));
+    position: sticky;
+    bottom: 0;
+    /* Dynamic padding based on device */
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 10px));
     min-height: 80px;
-    /* Ensure it stays above virtual keyboard on Android */
     z-index: 1000;
+    /* Prevent excessive spacing on iOS */
+    max-height: 120px;
 }
 
 .chat-input-container {
@@ -1376,13 +1378,41 @@ html, body {
 /* Fix for Android virtual keyboard */
 @media screen and (max-height: 600px) {
     .chat-container {
-        height: calc(100vh - 120px);
+        height: calc(100vh - 100px);
     }
     
     .input-area {
-        position: sticky;
+        position: fixed;
         bottom: 0;
-        padding-bottom: calc(var(--spacing-xs) + env(safe-area-inset-bottom, 15px));
+        left: 0;
+        right: 0;
+        padding-bottom: calc(var(--spacing-xs) + env(safe-area-inset-bottom, 5px));
+        max-height: 90px;
+    }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .input-area {
+        padding-bottom: calc(var(--spacing-sm) + env(safe-area-inset-bottom, 8px));
+        max-height: 100px;
+    }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (max-width: 430px) and (max-height: 800px) {
+    .input-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding-bottom: calc(var(--spacing-xs) + env(safe-area-inset-bottom, 0px));
+        max-height: 85px;
+    }
+    
+    .chat-container {
+        height: calc(100vh - 85px);
+        margin-bottom: 85px;
     }
 }
 
@@ -1392,6 +1422,7 @@ html, body {
         max-width: 100%;
         height: 100vh;
         height: 100dvh;
+        overflow: hidden;
     }
     
     .camera-title {
@@ -1404,12 +1435,6 @@ html, body {
     
     .message-content {
         max-width: 85%;
-    }
-    
-    .input-area {
-        position: sticky;
-        bottom: 0;
-        padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0));
     }
 }
 
