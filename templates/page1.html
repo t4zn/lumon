@@ -25,16 +25,17 @@
             <div class="page-content">
                 <!-- Login form elements arranged vertically -->
                 <div class="button-list">
-                    <button class="placeholder-btn">Continue with Google</button>
-                    <input type="text" class="placeholder-btn" placeholder="Username or Email">
-                    <input type="password" class="placeholder-btn" placeholder="Password">
-                    <button class="placeholder-btn">Log In</button>
+                    <button class="placeholder-btn" id="google-login-btn">Continue with Google</button>
+                    <input type="text" class="placeholder-btn" placeholder="Username or Email" id="login-email">
+                    <input type="password" class="placeholder-btn" placeholder="Password" id="login-password">
                 </div>
                 
+                <!-- Error message -->
+                <div id="login-error" style="color:#ff6b6b; margin:10px 0; display:none;"></div>
                 <!-- Active navigation button -->
                 <div class="navigation-buttons centered">
-                    <button class="nav-btn active-btn" onclick="navigateToApp()">
-                        <span class="btn-text">2</span>
+                    <button class="nav-btn active-btn" id="login-btn">
+                        <span class="btn-text">Login</span>
                     </button>
                 </div>
             </div>
@@ -59,6 +60,37 @@
                 window.location.href = url;
             }, 300);
         }
+
+        document.getElementById('login-btn').onclick = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            if (!email || !password) {
+                errorDiv.textContent = 'Please enter both email and password.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    transitionToPage('/app');
+                } else {
+                    errorDiv.textContent = 'Invalid email or password.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Invalid email or password.';
+                errorDiv.style.display = 'block';
+            }
+        };
     </script>
 </body>
 </html>

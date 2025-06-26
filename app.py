@@ -2,7 +2,7 @@ import os
 import logging
 import uuid
 import requests
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from PIL import Image
@@ -16,6 +16,15 @@ from dotenv import load_dotenv
 
 # Load environment variables first
 load_dotenv()
+
+# Import Supabase integration
+try:
+    from supabase_config import is_supabase_available
+    from database_service import db_service
+    SUPABASE_AVAILABLE = is_supabase_available()
+except ImportError as e:
+    logging.warning(f"Supabase integration not available: {e}")
+    SUPABASE_AVAILABLE = False
 
 # Import AI libraries with fallback handling
 try:
@@ -66,8 +75,6 @@ if TOGETHER_API_KEY and TOGETHER_AVAILABLE:
     together_client = Together(api_key=TOGETHER_API_KEY)
 else:
     together_client = None
-
-
 
 # Simplified plant identification without heavy ML dependencies
 classifier = None
@@ -766,6 +773,8 @@ def landing():
 @app.route('/app')
 def index():
     """Main app page"""
+    if not session.get('authenticated'):
+        return redirect(url_for('page1'))
     cleanup_old_uploads()
     return render_template('index.html')
 
@@ -1091,8 +1100,6 @@ def generate_fallback_response(message):
     dummy_session = {'history': [], 'context': {}}
     return generate_smart_fallback_response(message, dummy_session)
 
-
-
 def generate_contextual_botanical_response(message, context=""):
     """Generate contextual botanical responses with dynamic content"""
     message_lower = message.lower().strip()
@@ -1198,6 +1205,111 @@ def get_plant_care_advice(plant_name):
         return ["Water when soil surface is dry", "Tolerates low to bright light", "Flowers indicate good care", "Drooping leaves signal watering time"]
     else:
         return ["Provide appropriate light for species", "Water when topsoil feels dry", "Ensure good drainage", "Feed during growing season"]
+
+# Authentication Routes
+@app.route('/api/register', methods=['POST'])
+def register():
+    """User registration endpoint"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        username = data.get('username')
+        
+        if not all([email, password, username]):
+            return jsonify({"success": False, "error": "Missing required fields"}), 400
+        
+        if not SUPABASE_AVAILABLE:
+            return jsonify({"success": False, "error": "Database not available"}), 503
+        
+        result = db_service.create_user(email, password, username)
+        
+        if result["success"]:
+            return jsonify(result), 201
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        logging.error(f"Registration error: {e}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """User login endpoint"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        
+        if not all([email, password]):
+            return jsonify({"success": False, "error": "Missing email or password"}), 400
+        
+        if not SUPABASE_AVAILABLE:
+            return jsonify({"success": False, "error": "Database not available"}), 503
+        
+        result = db_service.authenticate_user(email, password)
+        
+        if result["success"]:
+            # Store user session
+            session['user_id'] = result["user_id"]
+            session['authenticated'] = True
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 401
+            
+    except Exception as e:
+        logging.error(f"Login error: {e}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    """User logout endpoint"""
+    try:
+        session.clear()
+        return jsonify({"success": True, "message": "Logged out successfully"}), 200
+    except Exception as e:
+        logging.error(f"Logout error: {e}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route('/api/user/profile', methods=['GET'])
+def get_profile():
+    """Get current user profile"""
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({"success": False, "error": "Not authenticated"}), 401
+        
+        if not SUPABASE_AVAILABLE:
+            return jsonify({"success": False, "error": "Database not available"}), 503
+        
+        result = db_service.get_user_profile(user_id)
+        return jsonify(result), 200 if result["success"] else 404
+        
+    except Exception as e:
+        logging.error(f"Profile error: {e}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route('/api/auth/status', methods=['GET'])
+def auth_status():
+    """Check authentication status"""
+    try:
+        user_id = session.get('user_id')
+        authenticated = session.get('authenticated', False)
+        
+        if authenticated and user_id and SUPABASE_AVAILABLE:
+            profile_result = db_service.get_user_profile(user_id)
+            if profile_result["success"]:
+                return jsonify({
+                    "authenticated": True,
+                    "user_id": user_id,
+                    "profile": profile_result["profile"]
+                }), 200
+        
+        return jsonify({"authenticated": False}), 200
+        
+    except Exception as e:
+        logging.error(f"Auth status error: {e}")
+        return jsonify({"authenticated": False, "error": "Internal server error"}), 500
 
 @app.route('/page0')
 def page0():
