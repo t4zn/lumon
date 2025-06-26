@@ -773,7 +773,8 @@ def landing():
 @app.route('/app')
 def index():
     """Main app page"""
-    if not session.get('authenticated'):
+    # Allow both authenticated and guest users
+    if not session.get('authenticated') and not session.get('guest'):
         return redirect(url_for('page1'))
     cleanup_old_uploads()
     return render_template('index.html')
@@ -1351,6 +1352,27 @@ def download_apk():
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'healthy', 'model_loaded': classifier is not None})
+
+@app.route('/api/guest', methods=['POST'])
+def guest_login():
+    session.clear()
+    session['guest'] = True
+    return jsonify({'success': True})
+
+@app.route('/auth/google')
+def auth_google():
+    # Construct the Supabase Google OAuth URL
+    redirect_url = url_for('auth_google_callback', _external=True)
+    supabase_url = os.environ.get('SUPABASE_URL')
+    return redirect(
+        f'{supabase_url}/auth/v1/authorize?provider=google&redirect_to={redirect_url}'
+    )
+
+@app.route('/auth/google/callback')
+def auth_google_callback():
+    # After Google login, Supabase will redirect here
+    # You can add logic to handle the session if needed
+    return redirect('/app')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

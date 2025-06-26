@@ -31,6 +31,9 @@
                 <button class="nav-btn" onclick="navigateToPage2()">
                     <span class="btn-text">Get Started</span>
                 </button>
+                <button class="nav-btn" id="google-btn-page0" type="button">
+                    <span class="btn-text"><i class="fab fa-google"></i> Continue with Google</span>
+                </button>
                 <button class="nav-btn" onclick="navigateToApp()">
                     <span class="btn-text">Start as Guest</span>
                 </button>
@@ -56,6 +59,15 @@
         function navigateToPage2() {
             transitionToPage('/page2');
         }
+        
+        document.getElementById('google-btn-page0').onclick = function() {
+            window.location.href = '/auth/google';
+        };
+        
+        document.querySelector('button[onclick="navigateToApp()"]').onclick = async function() {
+            await fetch('/api/guest', {method: 'POST'});
+            transitionToPage('/app');
+        };
         
         function transitionToPage(url) {
             document.querySelector('.page-container').style.transform = 'scale(0.9)';

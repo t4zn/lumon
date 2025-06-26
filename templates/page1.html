@@ -25,7 +25,7 @@
             <div class="page-content">
                 <!-- Login form elements arranged vertically -->
                 <div class="button-list">
-                    <button class="placeholder-btn" id="google-login-btn">Continue with Google</button>
+                    <button class="placeholder-btn" id="google-btn-page1">Continue with Google</button>
                     <input type="text" class="placeholder-btn" placeholder="Username or Email" id="login-email">
                     <input type="password" class="placeholder-btn" placeholder="Password" id="login-password">
                 </div>
@@ -90,6 +90,10 @@
                 errorDiv.textContent = 'Invalid email or password.';
                 errorDiv.style.display = 'block';
             }
+        };
+
+        document.getElementById('google-btn-page1').onclick = function() {
+            window.location.href = '/auth/google';
         };
     </script>
 </body>
