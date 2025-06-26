@@ -116,5 +116,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Simple enter app function
 function enterApp() {
-    window.location.href = '/app';
+    window.location.href = '/page0';
 }

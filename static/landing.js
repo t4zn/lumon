@@ -478,13 +478,13 @@ class FloraLanding {
         console.log('Transitioning to app...');
         
         // Simple immediate navigation - no fancy animations to avoid issues
-        window.location.href = '/app';
+        window.location.href = '/page0';
         
         // Fallback in case location change fails
         setTimeout(() => {
             if (window.location.pathname === '/') {
                 console.log('Fallback navigation');
-                window.open('/app', '_self');
+                window.open('/page0', '_self');
             }
         }, 1000);
     }
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startBtn.onclick = function(e) {
                 e.preventDefault();
                 console.log('Button clicked - navigating to app');
-                window.location.href = '/app';
+                window.location.href = '/page0';
             };
         }
     }, 100);
