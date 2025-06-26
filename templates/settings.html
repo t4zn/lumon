@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flora - Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings_style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div class="page-container">
+        <div class="floating-elements-3d"></div>
+        
+        <!-- Back button -->
+        <button class="back-btn" onclick="navigateToApp()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        
+        <div class="settings-container">
+            <h1 class="settings-title">
+                <i class="fas fa-cog"></i>
+                Settings
+            </h1>
+            
+            <div class="settings-grid">
+                <!-- Profile Picture -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Profile Picture</h3>
+                        <p>Change your profile photo</p>
+                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Profile Picture')">
+                            <i class="fas fa-camera"></i>
+                            Upload Photo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Username -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Username</h3>
+                        <p>Update your display name</p>
+                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Username')">
+                            <i class="fas fa-edit"></i>
+                            Edit Name
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Country -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Country</h3>
+                        <p>Select your country</p>
+                        <div class="country-dropdown-container">
+                            <button class="setting-btn country-btn" onclick="toggleCountryDropdown()">
+                                <i class="fas fa-flag"></i>
+                                <span id="selected-country">Select Country</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </button>
+                            
+                            <div class="country-dropdown" id="country-dropdown">
+                                <div class="country-search">
+                                    <input type="text" id="country-search" placeholder="Search countries..." onkeyup="filterCountries()">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="country-list" id="country-list">
+                                    <!-- Countries will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms & Conditions -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Terms & Conditions</h3>
+                        <p>View our terms of service</p>
+                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Terms & Conditions')">
+                            <i class="fas fa-external-link-alt"></i>
+                            View Terms
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Change Password -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Change Password</h3>
+                        <p>Update your account password</p>
+                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Change Password')">
+                            <i class="fas fa-key"></i>
+                            Change Password
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Help -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Help</h3>
+                        <p>Get support and FAQ</p>
+                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Help')">
+                            <i class="fas fa-life-ring"></i>
+                            Get Help
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Logout -->
+                <div class="setting-item logout-item">
+                    <div class="setting-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="setting-content">
+                        <h3>Logout</h3>
+                        <p>Sign out of your account</p>
+                        <button class="setting-btn logout-btn" onclick="showPlaceholder('Logout')">
+                            <i class="fas fa-power-off"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notification toast -->
+        <div class="toast" id="toast">
+            <i class="fas fa-info-circle"></i>
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='settings_script.js') }}"></script>
+    <script>
+        function navigateToApp() {
+            transitionToPage('/app');
+        }
+        
+        function transitionToPage(url) {
+            document.querySelector('.page-container').style.transform = 'scale(0.9)';
+            document.querySelector('.page-container').style.opacity = '0';
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 300);
+        }
+        
+        function showPlaceholder(feature) {
+            showToast(`${feature} feature coming soon!`, 'info');
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'flex';
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
