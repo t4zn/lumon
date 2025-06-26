@@ -1,4 +1,6 @@
 /* Flora Pages - 3D Animated Styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
     --flora-primary: #00ff88;
     --flora-secondary: #00cc6a;
@@ -24,7 +26,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-secondary) 100%);
     color: var(--text-primary);
     overflow: hidden;
