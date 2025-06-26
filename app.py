@@ -1214,6 +1214,11 @@ def page2():
     """Page 2"""
     return render_template('page2.html')
 
+@app.route('/settings')
+def settings():
+    """Settings page with profile options"""
+    return render_template('settings.html')
+
 @app.route('/download')
 def download_page():
     """APK download page"""
