@@ -9,49 +9,74 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        html, body {
-            height: 100vh;
-            width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            margin: 0;
-            padding: 0;
-            background: #000 !important;
-            font-family: 'Inter', Arial, sans-serif;
-        }
-        .page-container {
-            min-height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            position: relative;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        .history-header {
-            width: 100vw;
-            max-width: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 32px 24px 12px 24px;
-            position: relative;
-        }
-        .history-title {
-            font-size: 2rem;
-            color: #fff;
-            font-weight: 700;
-            letter-spacing: 0.01em;
-            display: flex;
-            align-items: center;
-        }
-        .history-title i {
-            margin-right: 12px;
-            color: #10b981;
-            font-size: 1.4em;
-        }
+html, body {
+  height: 100dvh;
+  width: 100dvw;
+  min-height: 100dvh;
+  min-width: 100dvw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden !important;
+  box-sizing: border-box;
+  overscroll-behavior: none;
+  background: #000 !important;
+  font-family: 'Inter', Arial, sans-serif;
+}
+.page-container {
+  height: 100dvh;
+  width: 100dvw;
+  min-height: 100dvh;
+  min-width: 100dvw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+.history-header {
+  width: 100vw;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 24px 12px 24px;
+  position: relative;
+}
+.history-title {
+  font-size: 2rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+}
+.animated-glow {
+  animation: glow 2s infinite alternate, floaty 4s ease-in-out infinite;
+}
+@keyframes glow {
+  0% { text-shadow: 0 0 8px #10b981, 0 0 2px #fff; }
+  100% { text-shadow: 0 0 24px #10b981, 0 0 8px #fff; }
+}
+@keyframes floaty {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+.animated-history-text {
+  display: inline-block;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+.history-title i {
+  margin-right: 12px;
+  color: #10b981;
+  font-size: 1.4em;
+}
+
         .delete-history-btn {
             background: none;
             border: none;
@@ -105,10 +130,10 @@
     <div class="page-container">
         <div class="floating-elements-3d"></div>
         <div class="history-header">
-            <div class="history-title">
-                <i class="fas fa-history"></i>
-                History
-            </div>
+            <div class="history-title animated-glow">
+  <i class="fas fa-history"></i>
+  <span class="animated-history-text">History</span>
+</div>
             <button class="delete-history-btn" title="Delete All History" onclick="deleteHistory()">
                 <i class="fas fa-trash"></i>
             </button>
@@ -122,32 +147,67 @@
     </div>
     <script>
     // Dummy data for demo; replace with actual user history fetch
-    const userHistory = JSON.parse(localStorage.getItem('lumon_history') || '[]');
-    const historyList = document.getElementById('history-list');
-    const historyEmpty = document.getElementById('history-empty');
+const userHistory = JSON.parse(localStorage.getItem('lumon_history') || '[]');
+const historyList = document.getElementById('history-list');
+const historyEmpty = document.getElementById('history-empty');
 
-    function renderHistory() {
-        historyList.innerHTML = '';
-        if (!userHistory.length) {
-            historyEmpty.style.display = 'block';
-            return;
-        }
-        historyEmpty.style.display = 'none';
-        userHistory.forEach((item, idx) => {
-            const el = document.createElement('div');
-            el.className = 'history-item';
-            el.innerHTML = `<span>${item}</span>`;
-            historyList.appendChild(el);
-        });
+function renderHistory() {
+    historyList.innerHTML = '';
+    if (!userHistory.length) {
+        historyEmpty.style.display = 'block';
+        return;
     }
-    function deleteHistory() {
-        localStorage.removeItem('lumon_history');
-        userHistory.length = 0;
-        renderHistory();
-    }
+    historyEmpty.style.display = 'none';
+    userHistory.forEach((item, idx) => {
+        const el = document.createElement('div');
+        el.className = 'history-item';
+        el.innerHTML = `<span>${item}</span>`;
+        historyList.appendChild(el);
+    });
+}
+function deleteHistory() {
+    localStorage.removeItem('lumon_history');
+    userHistory.length = 0;
     renderHistory();
-    // Leaf/floating animation loader (reuse from other pages if available)
-    // ...
+}
+renderHistory();
+// 3D floating leaf animation loader from page0
+if (typeof THREE !== 'undefined') {
+  function createLeaf() {
+    const leaf = document.createElement('div');
+    leaf.className = 'floating-leaf';
+    leaf.style.position = 'absolute';
+    leaf.style.left = Math.random() * 100 + 'vw';
+    leaf.style.top = Math.random() * 100 + 'vh';
+    leaf.style.opacity = Math.random() * 0.5 + 0.5;
+    leaf.style.transform = `scale(${Math.random() * 0.5 + 0.6})`;
+    leaf.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 2C8 2 2 8 2 16s6 14 14 14 14-6 14-14S24 2 16 2z" fill="#10b981"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#fff"/></svg>';
+    return leaf;
+  }
+  const container = document.querySelector('.floating-elements-3d');
+  if (container) {
+    for (let i = 0; i < 8; i++) {
+      const leaf = createLeaf();
+      container.appendChild(leaf);
+      animateLeaf(leaf);
+    }
+  }
+  function animateLeaf(leaf) {
+    let angle = Math.random() * 2 * Math.PI;
+    let speed = 0.2 + Math.random() * 0.3;
+    let amplitude = 10 + Math.random() * 10;
+    let baseTop = parseFloat(leaf.style.top);
+    function frame() {
+      angle += 0.01 * speed;
+      let x = parseFloat(leaf.style.left);
+      leaf.style.top = (baseTop + Math.sin(angle) * amplitude) + 'vh';
+      leaf.style.left = (x + Math.cos(angle) * 0.1) + 'vw';
+      requestAnimationFrame(frame);
+    }
+    frame();
+  }
+}
+
     </script>
 </body>
 </html>
