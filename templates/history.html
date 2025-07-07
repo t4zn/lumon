@@ -38,18 +38,22 @@ html, body {
   width: 100vw;
   max-width: 420px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 32px 24px 12px 24px;
+  justify-content: flex-start;
+  padding: 24px 0 8px 0;
   position: relative;
+  gap: 6px;
 }
 .history-title {
-  font-size: 2rem;
+  font-size: 1.15rem;
   color: #fff;
   font-weight: 700;
   letter-spacing: 0.01em;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 .animated-glow {
   animation: glow 2s infinite alternate, floaty 4s ease-in-out infinite;
@@ -66,15 +70,15 @@ html, body {
 .animated-history-text {
   display: inline-block;
   font-family: 'Inter', Arial, sans-serif;
-  font-size: 2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: #fff;
 }
 .history-title i {
-  margin-right: 12px;
+  margin-right: 7px;
   color: #10b981;
-  font-size: 1.4em;
+  font-size: 1em;
 }
 
         .delete-history-btn {
@@ -129,15 +133,25 @@ html, body {
 <body>
     <div class="page-container">
         <div class="floating-elements-3d"></div>
-        <div class="history-header">
-            <div class="history-title animated-glow">
-  <i class="fas fa-history"></i>
-  <span class="animated-history-text">History</span>
+        <div class="history-header" style="flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 0 8px 0;gap:6px;">
+  <button class="back-btn" onclick="navigateToApp()" style="margin-bottom:8px;align-self:flex-start;margin-left:18px;">
+    <span style="display:inline-block;width:36px;height:36px;background:#10b981;border-radius:50%;box-shadow:0 2px 8px #10b98144;display:flex;align-items:center;justify-content:center;border:none;outline:none;cursor:pointer;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+  <div class="history-title animated-glow" style="font-size:1.45rem;align-items:center;justify-content:center;gap:8px;">
+    <i class="fas fa-history" style="font-size:1.25em;margin-right:8px;"></i>
+    <span class="animated-history-text" style="font-size:1.45rem;">History</span>
+  </div>
+  <button class="delete-history-btn" title="Delete All History" onclick="deleteHistory()" style="position:absolute;top:18px;right:24px;">
+    <i class="fas fa-trash"></i>
+  </button>
 </div>
-            <button class="delete-history-btn" title="Delete All History" onclick="deleteHistory()">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
+<script>
+function navigateToApp() {
+  window.location.href = '/app';
+}
+</script>
         <div class="history-list" id="history-list">
             <!-- History items will be injected here -->
         </div>
