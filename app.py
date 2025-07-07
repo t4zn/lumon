@@ -1380,5 +1380,12 @@ def auth_google_callback():
     # Frontend JS will extract the token and call /api/oauth/session
     return render_template('google_oauth_callback.html')
 
+@app.route('/')
+def landing():
+    # If user is authenticated or guest, go to main app; else show landing/auth page
+    if session.get('authenticated') or session.get('guest'):
+        return redirect(url_for('index'))
+    return render_template('page0.html')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
