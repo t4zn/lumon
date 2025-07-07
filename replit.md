@@ -1,7 +1,7 @@
-# Flora Plant Identification App
+# Lumon Plant Identification App
 
 ## Project Overview
-Flora is a plant identification web application that uses PlantNet API for accurate plant identification and AI-powered chatbot for botanical assistance.
+Lumon is a plant identification web application that uses PlantNet API for accurate plant identification and AI-powered chatbot for botanical assistance.
 
 ## Recent Changes
 - **June 25, 2025**: Successfully migrated from Replit Agent to Replit environment

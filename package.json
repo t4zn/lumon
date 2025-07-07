@@ -1,7 +1,7 @@
 {
-  "name": "flora-app",
+  "name": "Lumon-app",
   "version": "1.0.0",
-  "description": "Flora AI Plant Expert",
+  "description": "Lumon AI Plant Expert",
   "main": "index.html",
   "scripts": {
     "build": "echo 'Build complete'",

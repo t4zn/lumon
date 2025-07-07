@@ -2,14 +2,14 @@ COPY THESE COMMANDS TO YOUR REPLIT SHELL:
 
 1. git add .
 
-2. git commit -m "Initial Flora release: Complete plant identification app with AI chatbot"
+2. git commit -m "Initial Lumon release: Complete plant identification app with AI chatbot"
 
 3. git push origin main
 
 If authentication fails, try:
 git push origin main --force
 
-Your Flora project includes:
+Your Lumon project includes:
 - Complete Flask web application
 - PlantNet API integration
 - AI chatbot with Gemini Pro + DeepSeek
@@ -17,4 +17,4 @@ Your Flora project includes:
 - Android app source code
 - Comprehensive documentation
 
-Repository: https://github.com/t4zn/flora
+Repository: https://github.com/t4zn/Lumon

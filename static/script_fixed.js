@@ -1,6 +1,6 @@
-// Flora Plant Identifier - Fixed Implementation
+// Lumon Plant Identifier - Fixed Implementation
 
-class FloraApp {
+class LumonApp {
     constructor() {
         this.messageCounter = 0;
         this.initializeElements();
@@ -710,7 +710,7 @@ class FloraApp {
         
         body.setAttribute('data-theme', newTheme);
         document.documentElement.setAttribute('data-bs-theme', newTheme);
-        localStorage.setItem('flora-theme', newTheme);
+        localStorage.setItem('Lumon-theme', newTheme);
         
         console.log('Theme changed to:', newTheme);
         
@@ -730,7 +730,7 @@ class FloraApp {
     }
 
     initializeTheme() {
-        const savedTheme = localStorage.getItem('flora-theme') || 'dark';
+        const savedTheme = localStorage.getItem('Lumon-theme') || 'dark';
         document.body.setAttribute('data-theme', savedTheme);
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
         
@@ -866,5 +866,5 @@ class FloraApp {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new FloraApp();
+    new LumonApp();
 });

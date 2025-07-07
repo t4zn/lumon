@@ -1,12 +1,12 @@
-/* Flora Pages - 3D Animated Styles */
+/* Lumon Pages - 3D Animated Styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --flora-primary: #10b981;
-    --flora-secondary: #059669;
-    --flora-accent: #34d399;
-    --flora-emerald: #50c878;
-    --flora-mint: #98fb98;
+    --Lumon-primary: #10b981;
+    --Lumon-secondary: #059669;
+    --Lumon-accent: #34d399;
+    --Lumon-emerald: #50c878;
+    --Lumon-mint: #98fb98;
     --bg-dark: #0a0a0a;
     --bg-secondary: #111111;
     --text-primary: rgba(255, 255, 255, 0.9);
@@ -19,8 +19,8 @@
     --border-radius: 25px;
     --shadow-soft: 0 8px 32px rgba(16, 185, 129, 0.15);
     --shadow-glow: 0 0 40px rgba(16, 185, 129, 0.3);
-    --gradient-primary: linear-gradient(135deg, var(--flora-primary), var(--flora-accent));
-    --gradient-secondary: linear-gradient(135deg, var(--flora-secondary), var(--flora-emerald));
+    --gradient-primary: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-accent));
+    --gradient-secondary: linear-gradient(135deg, var(--Lumon-secondary), var(--Lumon-emerald));
     --gradient-glow: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent);
 }
 
@@ -72,16 +72,16 @@ body {
     width: 100%;
 }
 
-/* Flora Section Styles */
-.flora-section {
+/* Lumon Section Styles */
+.Lumon-section {
     margin-bottom: var(--spacing-xl);
     animation: fadeInUp 1s ease-out;
 }
 
-.flora-icon {
+.Lumon-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -91,26 +91,26 @@ body {
     animation: float 3s ease-in-out infinite, pulse 2s ease-in-out infinite;
 }
 
-.flora-icon i {
+.Lumon-icon i {
     font-size: 32px;
     color: var(--bg-dark);
 }
 
-.flora-title {
+.Lumon-title {
     font-size: 36px;
     font-weight: 700;
-    color: var(--flora-primary);
+    color: var(--Lumon-primary);
     margin-bottom: var(--spacing-xs);
     text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
 }
 
-.flora-subtitle {
+.Lumon-subtitle {
     font-size: 16px;
     color: var(--text-secondary);
     margin-bottom: var(--spacing-xs);
 }
 
-.flora-description {
+.Lumon-description {
     font-size: 18px;
     color: var(--text-primary);
     font-weight: 500;
@@ -134,7 +134,7 @@ body {
     width: 100%;
     max-width: 280px;
     height: 60px;
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     border: none;
     border-radius: var(--border-radius);
     color: var(--bg-dark);
@@ -193,7 +193,7 @@ body {
     left: 30px;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     border: none;
     border-radius: 50%;
     color: var(--bg-dark);
@@ -243,7 +243,7 @@ body {
 .placeholder-btn {
     width: 100%;
     height: 60px;
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     border: none;
     border-radius: var(--border-radius);
     opacity: 0.7;
@@ -309,7 +309,7 @@ body {
     position: fixed;
     width: 15px;
     height: 15px;
-    background: linear-gradient(45deg, var(--flora-primary), var(--flora-accent));
+    background: linear-gradient(45deg, var(--Lumon-primary), var(--Lumon-accent));
     border-radius: 50% 0 50% 0;
     opacity: 0.7;
     pointer-events: none;
@@ -320,7 +320,7 @@ body {
 
 .floating-circle {
     position: fixed;
-    background: radial-gradient(circle, var(--flora-primary) 0%, rgba(0, 255, 136, 0.3) 50%, transparent 100%);
+    background: radial-gradient(circle, var(--Lumon-primary) 0%, rgba(0, 255, 136, 0.3) 50%, transparent 100%);
     border-radius: 50%;
     opacity: 0.5;
     pointer-events: none;
@@ -331,7 +331,7 @@ body {
 .floating-line {
     position: fixed;
     width: 2px;
-    background: linear-gradient(to bottom, var(--flora-primary), var(--flora-accent), transparent);
+    background: linear-gradient(to bottom, var(--Lumon-primary), var(--Lumon-accent), transparent);
     opacity: 0.6;
     pointer-events: none;
     z-index: 1;
@@ -341,7 +341,7 @@ body {
 
 .floating-particle {
     position: fixed;
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     border-radius: 50%;
     opacity: 0.4;
     pointer-events: none;
@@ -392,16 +392,16 @@ body {
         max-width: 90%;
     }
     
-    .flora-icon {
+    .Lumon-icon {
         width: 60px;
         height: 60px;
     }
     
-    .flora-icon i {
+    .Lumon-icon i {
         font-size: 24px;
     }
     
-    .flora-title {
+    .Lumon-title {
         font-size: 28px;
     }
     

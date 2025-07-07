@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Flora GitHub Push Script
-echo "🌱 Preparing Flora project for GitHub push..."
+# Lumon GitHub Push Script
+echo "🌱 Preparing Lumon project for GitHub push..."
 
 # Add all files to git
 echo "Adding files to git..."
@@ -9,7 +9,7 @@ git add .
 
 # Commit with descriptive message
 echo "Creating commit..."
-git commit -m "Initial commit: Flora Plant Identification App
+git commit -m "Initial commit: Lumon Plant Identification App
 
 Features:
 - PlantNet API integration for accurate plant identification
@@ -23,7 +23,7 @@ Features:
 echo "Pushing to GitHub repository..."
 git push -u origin main
 
-echo "✅ Flora project successfully pushed to https://github.com/t4zn/flora"
+echo "✅ Lumon project successfully pushed to https://github.com/t4zn/Lumon"
 echo ""
 echo "Next steps:"
 echo "1. Add your API keys to the repository secrets (for deployment)"

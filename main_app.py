@@ -62,7 +62,7 @@ def identify_plant_with_plantnet(image_path):
             return None
         
         # Try multiple PlantNet projects for better coverage
-        projects = ['weurope', 'k-world-flora', 'the-plant-list']
+        projects = ['weurope', 'k-world-Lumon', 'the-plant-list']
         
         for project in projects:
             try:
@@ -363,7 +363,7 @@ def chat():
         
         # Generate response
         if not is_botanical_question(message):
-            response = "I'm Flora, your botanical assistant! I specialize in plant identification and care. Please ask me about plants, gardening, or upload a plant image for identification."
+            response = "I'm Lumon, your botanical assistant! I specialize in plant identification and care. Please ask me about plants, gardening, or upload a plant image for identification."
         else:
             response = generate_botanical_response_with_memory(message, session_id)
         

@@ -18,7 +18,7 @@ errorlog = '-'
 loglevel = 'info'
 
 # Process naming
-proc_name = 'floratracker'
+proc_name = 'Lumontracker'
 
 # Server mechanics
 daemon = False

@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo "Creating proper Android APK for Flora..."
+echo "Creating proper Android APK for Lumon..."
 
 # Create proper Android project structure
-mkdir -p flora-android/{app/src/main/{java/com/flora/app,res/{layout,values,drawable,mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}},assets/www},gradle/wrapper}
+mkdir -p Lumon-android/{app/src/main/{java/com/Lumon/app,res/{layout,values,drawable,mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}},assets/www},gradle/wrapper}
 
 # Create MainActivity.java
-cat > flora-android/app/src/main/java/com/flora/app/MainActivity.java << 'EOF'
-package com.flora.app;
+cat > Lumon-android/app/src/main/java/com/Lumon/app/MainActivity.java << 'EOF'
+package com.Lumon.app;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
         webView = findViewById(R.id.webview);
         setupWebView();
         
-        // Load the Flora app
+        // Load the Lumon app
         webView.loadUrl("file:///android_asset/www/index.html");
     }
 
@@ -80,10 +80,10 @@ public class MainActivity extends Activity {
 EOF
 
 # Create AndroidManifest.xml
-cat > flora-android/app/src/main/AndroidManifest.xml << 'EOF'
+cat > Lumon-android/app/src/main/AndroidManifest.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.flora.app"
+    package="com.Lumon.app"
     android:versionCode="1"
     android:versionName="1.0">
 
@@ -98,7 +98,7 @@ cat > flora-android/app/src/main/AndroidManifest.xml << 'EOF'
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="Flora"
+        android:label="Lumon"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         
         <activity
@@ -115,7 +115,7 @@ cat > flora-android/app/src/main/AndroidManifest.xml << 'EOF'
 EOF
 
 # Create layout
-cat > flora-android/app/src/main/res/layout/activity_main.xml << 'EOF'
+cat > Lumon-android/app/src/main/res/layout/activity_main.xml << 'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -131,31 +131,31 @@ cat > flora-android/app/src/main/res/layout/activity_main.xml << 'EOF'
 EOF
 
 # Create strings.xml
-cat > flora-android/app/src/main/res/values/strings.xml << 'EOF'
+cat > Lumon-android/app/src/main/res/values/strings.xml << 'EOF'
 <resources>
-    <string name="app_name">Flora</string>
+    <string name="app_name">Lumon</string>
 </resources>
 EOF
 
 # Copy icons (using convert to create proper sizes)
-convert flora-icon-original.jpg -resize 48x48 flora-android/app/src/main/res/mipmap-mdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png flora-android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-convert flora-icon-original.jpg -resize 72x72 flora-android/app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png flora-android/app/src/main/res/mipmap-hdpi/ic_launcher.png  
-convert flora-icon-original.jpg -resize 96x96 flora-android/app/src/main/res/mipmap-xhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png flora-android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-convert flora-icon-original.jpg -resize 144x144 flora-android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png flora-android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-convert flora-icon-original.jpg -resize 192x192 flora-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png flora-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+convert Lumon-icon-original.jpg -resize 48x48 Lumon-android/app/src/main/res/mipmap-mdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png Lumon-android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+convert Lumon-icon-original.jpg -resize 72x72 Lumon-android/app/src/main/res/mipmap-hdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png Lumon-android/app/src/main/res/mipmap-hdpi/ic_launcher.png  
+convert Lumon-icon-original.jpg -resize 96x96 Lumon-android/app/src/main/res/mipmap-xhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png Lumon-android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+convert Lumon-icon-original.jpg -resize 144x144 Lumon-android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png Lumon-android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+convert Lumon-icon-original.jpg -resize 192x192 Lumon-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png 2>/dev/null || cp static/icon-192.png Lumon-android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
 # Copy web assets
-cp -r static/* flora-android/app/src/main/assets/www/
-cp -r templates/* flora-android/app/src/main/assets/www/
+cp -r static/* Lumon-android/app/src/main/assets/www/
+cp -r templates/* Lumon-android/app/src/main/assets/www/
 
 # Create offline-capable HTML with embedded AI
-cat > flora-android/app/src/main/assets/www/index.html << 'EOF'
+cat > Lumon-android/app/src/main/assets/www/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flora - Plant Identifier</title>
+    <title>Lumon - Plant Identifier</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); }
@@ -177,11 +177,11 @@ cat > flora-android/app/src/main/assets/www/index.html << 'EOF'
 </head>
 <body>
     <div class="app-container">
-        <div class="header">🌿 Flora - AI Plant Expert</div>
+        <div class="header">🌿 Lumon - AI Plant Expert</div>
         
         <div class="chat-area" id="chatArea">
             <div class="message bot-message">
-                <div>Hello! I'm Flora, your AI plant expert. 🌱</div>
+                <div>Hello! I'm Lumon, your AI plant expert. 🌱</div>
                 <div style="margin-top: 10px;">I can help you:</div>
                 <div>📸 Identify plants from photos</div>
                 <div>💬 Answer questions about plant care</div>
@@ -309,8 +309,8 @@ echo "✓ Created self-contained app with no server dependencies"
 echo "✓ App size will be approximately 15-25MB (proper Android app size)"
 
 # Create build info
-cat > flora-android/build-info.txt << 'EOF'
-Flora Android App - Build Information
+cat > Lumon-android/build-info.txt << 'EOF'
+Lumon Android App - Build Information
 
 This creates a proper Android application that:
 - Uses native Android WebView with proper permissions
@@ -321,7 +321,7 @@ This creates a proper Android application that:
 
 To build APK:
 1. Install Android Studio and SDK
-2. Open flora-android project
+2. Open Lumon-android project
 3. Build > Generate Signed Bundle/APK
 
 App Features:
@@ -334,5 +334,5 @@ App Features:
 EOF
 
 echo ""
-echo "Real Android app created in flora-android/ directory"
+echo "Real Android app created in Lumon-android/ directory"
 echo "This will create a proper ~20MB APK when built with Android Studio"

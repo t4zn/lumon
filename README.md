@@ -1,6 +1,6 @@
-# Flora - Plant Identification App 🌱
+# Lumon - Plant Identification App 🌱
 
-Flora is a sophisticated plant identification web application that combines AI-powered plant recognition with an intelligent botanical chatbot. Built with Flask and modern web technologies, Flora provides users with accurate plant identification and comprehensive plant care advice.
+Lumon is a sophisticated plant identification web application that combines AI-powered plant recognition with an intelligent botanical chatbot. Built with Flask and modern web technologies, Lumon provides users with accurate plant identification and comprehensive plant care advice.
 
 ## ✨ Features
 
@@ -38,8 +38,8 @@ Flora is a sophisticated plant identification web application that combines AI-p
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/t4zn/flora.git
-   cd flora
+   git clone https://github.com/t4zn/Lumon.git
+   cd Lumon
    ```
 
 2. **Install dependencies**
@@ -61,13 +61,13 @@ Flora is a sophisticated plant identification web application that combines AI-p
    python main.py
    ```
 
-5. **Access Flora**
+5. **Access Lumon**
    Open your browser to `http://localhost:5000`
 
 ## 📁 Project Structure
 
 ```
-flora/
+Lumon/
 ├── app.py                 # Main Flask application
 ├── main.py               # Application entry point
 ├── models.py             # Database models
@@ -81,7 +81,7 @@ flora/
 │   ├── landing.html     # Landing page
 │   ├── index.html       # Main app interface
 │   └── auth.html        # Authentication page
-├── flora-android/        # Android app source
+├── Lumon-android/        # Android app source
 └── uploads/             # Temporary image uploads
 ```
 
@@ -133,7 +133,7 @@ GET /health
 ## 🌍 Deployment
 
 ### Replit Deployment
-Flora is optimized for Replit deployment with automatic configuration:
+Lumon is optimized for Replit deployment with automatic configuration:
 
 1. Import the repository to Replit
 2. Add your API keys to Secrets
@@ -160,10 +160,10 @@ gunicorn --bind 0.0.0.0:5000 main:app
 
 ## 📱 Mobile App
 
-Flora includes a native Android application built with Capacitor:
+Lumon includes a native Android application built with Capacitor:
 
 ```bash
-cd flora-android
+cd Lumon-android
 npx cap sync android
 npx cap run android
 ```
@@ -191,10 +191,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/t4zn/flora/issues) page
+1. Check the [Issues](https://github.com/t4zn/Lumon/issues) page
 2. Create a new issue with detailed information
 3. Provide steps to reproduce any bugs
 
 ---
 
-**Flora** - Bringing nature closer through technology 🌿
+**Lumon** - Bringing nature closer through technology 🌿

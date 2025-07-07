@@ -1,7 +1,7 @@
-# Flora Android APK
+# Lumon Android APK
 
 ## Overview
-This directory contains the Android APK build for Flora - AI Plant Expert, a native Android application built from the Flora web project files.
+This directory contains the Android APK build for Lumon - AI Plant Expert, a native Android application built from the Lumon web project files.
 
 ## APK Features
 - **Native Android App**: Built with Capacitor for optimal performance
@@ -13,7 +13,7 @@ This directory contains the Android APK build for Flora - AI Plant Expert, a nat
 - **Inter Typography**: Consistent font styling throughout the app
 
 ## Build Process
-The APK is generated using Capacitor, which wraps the Flora web application in a native Android container:
+The APK is generated using Capacitor, which wraps the Lumon web application in a native Android container:
 
 1. **Web Assets**: All static files, templates, and scripts are bundled
 2. **Native Bridge**: Capacitor provides native device API access
@@ -62,7 +62,7 @@ The APK can be:
 - Shared through APK distribution platforms
 
 ## Notes
-- Built from Flora web project source files
+- Built from Lumon web project source files
 - Maintains full functionality of the web version
 - Optimized for mobile performance
 - Ready for production deployment

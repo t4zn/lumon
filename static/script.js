@@ -1,6 +1,6 @@
-// Flora Plant Identifier - Mobile Chatbot Interface
+// Lumon Plant Identifier - Mobile Chatbot Interface
 
-class FloraApp {
+class LumonApp {
     constructor() {
         this.initializeElements();
         this.attachEventListeners();
@@ -273,7 +273,7 @@ class FloraApp {
     
     setTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('flora-theme', theme);
+        localStorage.setItem('Lumon-theme', theme);
         
         // Update active theme option
         document.querySelectorAll('.theme-option').forEach(btn => {
@@ -1291,7 +1291,7 @@ class FloraApp {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.floraApp = new FloraApp();
+    window.LumonApp = new LumonApp();
     
     // Smooth page load animation
     gsap.fromTo('.mobile-app', 
@@ -1311,18 +1311,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('keydown', (e) => {
         // Escape to close camera or settings
         if (e.key === 'Escape') {
-            if (window.floraApp.cameraInterface.style.display === 'flex') {
-                window.floraApp.closeCamera();
+            if (window.LumonApp.cameraInterface.style.display === 'flex') {
+                window.LumonApp.closeCamera();
             }
-            if (window.floraApp.settingsModal.style.display === 'flex') {
-                window.floraApp.closeSettings();
+            if (window.LumonApp.settingsModal.style.display === 'flex') {
+                window.LumonApp.closeSettings();
             }
         }
         
         // Space or Enter to open camera
         if ((e.key === ' ' || e.key === 'Enter') && e.target === document.body) {
             e.preventDefault();
-            window.floraApp.openCamera();
+            window.LumonApp.openCamera();
         }
     });
     
@@ -1338,8 +1338,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Handle back button for camera
     window.addEventListener('popstate', () => {
-        if (window.floraApp.cameraInterface.style.display === 'flex') {
-            window.floraApp.closeCamera();
+        if (window.LumonApp.cameraInterface.style.display === 'flex') {
+            window.LumonApp.closeCamera();
         }
     });
 });
@@ -1347,21 +1347,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global error handler
 window.addEventListener('error', (e) => {
     console.error('Global error:', e.error);
-    if (window.floraApp) {
-        window.floraApp.addBotMessage('Sorry, something went wrong. Please try again.');
+    if (window.LumonApp) {
+        window.LumonApp.addBotMessage('Sorry, something went wrong. Please try again.');
     }
 });
 
 // Handle online/offline status
 window.addEventListener('online', () => {
-    if (window.floraApp) {
-        window.floraApp.showNotification('Connection restored', 'success');
+    if (window.LumonApp) {
+        window.LumonApp.showNotification('Connection restored', 'success');
     }
 });
 
 window.addEventListener('offline', () => {
-    if (window.floraApp) {
-        window.floraApp.addBotMessage('You appear to be offline. Please check your connection.');
+    if (window.LumonApp) {
+        window.LumonApp.addBotMessage('You appear to be offline. Please check your connection.');
     }
 });
 

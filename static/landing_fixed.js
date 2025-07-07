@@ -1,6 +1,6 @@
-// Flora Landing Page - Fixed Implementation
+// Lumon Landing Page - Fixed Implementation
 
-class FloraLanding {
+class LumonLanding {
     constructor() {
         this.initializeElements();
         this.createSimpleAnimations();
@@ -111,7 +111,7 @@ class FloraLanding {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new FloraLanding();
+    new LumonLanding();
 });
 
 // Simple enter app function

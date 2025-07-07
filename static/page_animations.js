@@ -1,5 +1,5 @@
-// Flora Pages - 3D Animation System
-class FloraPageAnimations {
+// Lumon Pages - 3D Animation System
+class LumonPageAnimations {
     constructor() {
         this.scene = null;
         this.camera = null;
@@ -217,7 +217,7 @@ class FloraPageAnimations {
 
 // Initialize animations when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new FloraPageAnimations();
+    new LumonPageAnimations();
     
     // Add entrance animations to page elements
     const pageContainer = document.querySelector('.page-container');

@@ -768,10 +768,6 @@ def confirm_email():
     # This is the redirect target for Supabase email confirmation links
     return render_template('confirm.html')
 
-@app.route('/login')
-def login():
-    # Redirect to Supabase login page
-    return redirect(url_for('auth.sign_in', provider='google'))
 
 @app.route('/callback')
 def callback():

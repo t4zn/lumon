@@ -1,13 +1,13 @@
-/* Flora - Advanced AI Botanist Mobile App */
+/* Lumon - Advanced AI Botanist Mobile App */
 
 /* Root variables */
 :root {
-    --flora-primary: #10b981;
-    --flora-secondary: #059669;
-    --flora-accent: #34d399;
-    --flora-green-light: #a7f3d0;
-    --flora-emerald: #50c878;
-    --flora-mint: #98fb98;
+    --Lumon-primary: #10b981;
+    --Lumon-secondary: #059669;
+    --Lumon-accent: #34d399;
+    --Lumon-green-light: #a7f3d0;
+    --Lumon-emerald: #50c878;
+    --Lumon-mint: #98fb98;
     
     /* Dark theme (default) */
     --bg-primary: #0a0a0a;
@@ -96,7 +96,7 @@ html, body {
 .leaf-particle {
     width: 20px;
     height: 20px;
-    background: linear-gradient(45deg, var(--flora-primary), var(--flora-accent));
+    background: linear-gradient(45deg, var(--Lumon-primary), var(--Lumon-accent));
     border-radius: 0 100% 0 100%;
     animation: floatLeaf 8s ease-in-out infinite;
 }
@@ -104,10 +104,10 @@ html, body {
 .pollen-particle {
     width: 8px;
     height: 8px;
-    background: var(--flora-mint);
+    background: var(--Lumon-mint);
     border-radius: 50%;
     animation: floatPollen 6s ease-in-out infinite;
-    box-shadow: 0 0 10px var(--flora-mint);
+    box-shadow: 0 0 10px var(--Lumon-mint);
 }
 
 .leaf-1 { top: 10%; left: 10%; animation-delay: 0s; }
@@ -201,32 +201,32 @@ html, body {
 .app-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--flora-primary);
+    color: var(--Lumon-primary);
     margin: 0;
     text-align: center;
     position: relative;
     text-shadow: 
-        0 0 10px var(--flora-primary),
-        0 0 20px var(--flora-primary),
-        0 0 30px var(--flora-primary);
-    animation: floraGlow 2s ease-in-out infinite alternate;
+        0 0 10px var(--Lumon-primary),
+        0 0 20px var(--Lumon-primary),
+        0 0 30px var(--Lumon-primary);
+    animation: LumonGlow 2s ease-in-out infinite alternate;
     transform-style: preserve-3d;
 }
 
-@keyframes floraGlow {
+@keyframes LumonGlow {
     0% {
         text-shadow: 
-            0 0 10px var(--flora-primary),
-            0 0 20px var(--flora-primary),
-            0 0 30px var(--flora-primary);
+            0 0 10px var(--Lumon-primary),
+            0 0 20px var(--Lumon-primary),
+            0 0 30px var(--Lumon-primary);
         transform: translateZ(0px);
     }
     100% {
         text-shadow: 
-            0 0 15px var(--flora-primary),
-            0 0 30px var(--flora-primary),
-            0 0 45px var(--flora-primary),
-            0 0 60px var(--flora-primary);
+            0 0 15px var(--Lumon-primary),
+            0 0 30px var(--Lumon-primary),
+            0 0 45px var(--Lumon-primary),
+            0 0 60px var(--Lumon-primary);
         transform: translateZ(5px);
     }
 }
@@ -253,13 +253,13 @@ html, body {
 }
 
 [data-theme="light"] .menu-btn:hover {
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     color: white;
     transform: scale(1.1);
 }
 
 .menu-btn:hover, .theme-toggle:hover, .settings-btn:hover {
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     color: white;
     transform: scale(1.1);
 }
@@ -326,7 +326,7 @@ html, body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-accent));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-accent));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -372,9 +372,9 @@ html, body {
 }
 
 .user-message .message-bubble {
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     color: white;
-    border-color: var(--flora-accent);
+    border-color: var(--Lumon-accent);
 }
 
 .message-bubble::before {
@@ -384,7 +384,7 @@ html, body {
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--flora-accent), transparent);
+    background: linear-gradient(90deg, transparent, var(--Lumon-accent), transparent);
     opacity: 0.5;
 }
 
@@ -420,7 +420,7 @@ html, body {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--flora-accent);
+    background: var(--Lumon-accent);
     animation: typingDot 1.5s ease-in-out infinite;
 }
 
@@ -455,7 +455,7 @@ html, body {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--flora-primary), var(--flora-accent));
+    background: linear-gradient(90deg, var(--Lumon-primary), var(--Lumon-accent));
 }
 
 .plant-image {
@@ -470,7 +470,7 @@ html, body {
 .plant-name {
     font-size: 20px;
     font-weight: 700;
-    color: var(--flora-primary);
+    color: var(--Lumon-primary);
     margin-bottom: var(--spacing-sm);
     display: flex;
     align-items: center;
@@ -491,7 +491,7 @@ html, body {
     padding: var(--spacing-sm);
     background: var(--bg-tertiary);
     border-radius: var(--border-radius-sm);
-    border-left: 3px solid var(--flora-primary);
+    border-left: 3px solid var(--Lumon-primary);
 }
 
 /* Dark mode only - light mode styles removed */
@@ -501,7 +501,7 @@ html, body {
     align-items: center;
     gap: var(--spacing-xs);
     padding: var(--spacing-sm) var(--spacing-md);
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     color: white;
     border: none;
     border-radius: var(--border-radius-sm);
@@ -525,7 +525,7 @@ html, body {
     padding: var(--spacing-md);
     background: var(--bg-quaternary);
     border-radius: var(--border-radius-sm);
-    border-left: 3px solid var(--flora-accent);
+    border-left: 3px solid var(--Lumon-accent);
 }
 
 .detail-item {
@@ -581,12 +581,12 @@ html, body {
     padding: var(--spacing-md);
     background: var(--bg-quaternary);
     border-radius: var(--border-radius-sm);
-    border-left: 3px solid var(--flora-accent);
+    border-left: 3px solid var(--Lumon-accent);
 }
 
 .care-tips h4 {
     margin: 0 0 var(--spacing-sm) 0;
-    color: var(--flora-primary);
+    color: var(--Lumon-primary);
     font-size: 14px;
     font-weight: 600;
 }
@@ -626,7 +626,7 @@ html, body {
 
 .camera-header {
     height: 120px;
-    background: linear-gradient(135deg, var(--flora-primary) 0%, var(--flora-secondary) 100%);
+    background: linear-gradient(135deg, var(--Lumon-primary) 0%, var(--Lumon-secondary) 100%);
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
     padding: var(--spacing-lg);
     display: flex;
@@ -688,7 +688,7 @@ html, body {
     left: 50%;
     width: 100px;
     height: 100px;
-    border: 2px solid var(--flora-accent);
+    border: 2px solid var(--Lumon-accent);
     border-radius: 50%;
     transform: translate(-50%, -50%);
     opacity: 0;
@@ -712,7 +712,7 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(transparent 49%, var(--flora-accent) 50%, transparent 51%);
+    background: linear-gradient(transparent 49%, var(--Lumon-accent) 50%, transparent 51%);
     animation: scanAnimation 2s ease-in-out infinite;
     opacity: 0.3;
 }
@@ -746,8 +746,8 @@ html, body {
 }
 
 .gallery-btn:hover, .flash-btn:hover {
-    border-color: var(--flora-primary);
-    color: var(--flora-primary);
+    border-color: var(--Lumon-primary);
+    color: var(--Lumon-primary);
     transform: scale(1.1);
 }
 
@@ -825,7 +825,7 @@ html, body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent 49%, var(--flora-accent) 50%, transparent 51%);
+    background: linear-gradient(45deg, transparent 49%, var(--Lumon-accent) 50%, transparent 51%);
     opacity: 0;
     animation: scanEffect 2s ease-in-out;
 }
@@ -842,7 +842,7 @@ html, body {
     left: 0;
     width: 2px;
     height: 100%;
-    background: var(--flora-accent);
+    background: var(--Lumon-accent);
     animation: scan 1.5s ease-in-out infinite;
 }
 
@@ -882,7 +882,7 @@ html, body {
 }
 
 .input-row:focus-within {
-    border-color: var(--flora-primary);
+    border-color: var(--Lumon-primary);
     box-shadow: 0 0 0 3px var(--glow);
 }
 
@@ -902,7 +902,7 @@ html, body {
 }
 
 .attach-btn:hover, .attach-btn.active {
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     color: white;
     transform: scale(1.1);
 }
@@ -932,7 +932,7 @@ html, body {
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     color: white;
     display: flex;
     align-items: center;
@@ -950,7 +950,7 @@ html, body {
 }
 
 .send-btn:not(:disabled):hover {
-    background: var(--flora-secondary);
+    background: var(--Lumon-secondary);
     transform: scale(1.1);
 }
 
@@ -960,7 +960,7 @@ html, body {
     padding: 10px;
     background: rgba(16, 185, 129, 0.05);
     border-radius: 8px;
-    border-left: 3px solid var(--flora-primary);
+    border-left: 3px solid var(--Lumon-primary);
 }
 
 .plant-detail {
@@ -972,7 +972,7 @@ html, body {
 }
 
 .plant-detail strong {
-    color: var(--flora-primary);
+    color: var(--Lumon-primary);
 }
 
 .input-suggestions {
@@ -1020,7 +1020,7 @@ html, body {
 }
 
 .suggestion:hover {
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
     color: white;
 }
 
@@ -1089,9 +1089,9 @@ html, body {
 
 .attach-options .camera-trigger-btn:hover,
 .attach-options .gallery-trigger-btn:hover {
-    background: linear-gradient(135deg, var(--flora-primary), var(--flora-secondary));
+    background: linear-gradient(135deg, var(--Lumon-primary), var(--Lumon-secondary));
     color: white;
-    border-color: var(--flora-primary);
+    border-color: var(--Lumon-primary);
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
 }
@@ -1180,7 +1180,7 @@ html, body {
     position: absolute;
     width: 100%;
     height: 100%;
-    border: 3px solid var(--flora-accent);
+    border: 3px solid var(--Lumon-accent);
     border-radius: 50%;
     animation: rotate 2s linear infinite;
 }
@@ -1191,7 +1191,7 @@ html, body {
 
 .strand-2 {
     animation-direction: reverse;
-    border-color: var(--flora-primary);
+    border-color: var(--Lumon-primary);
 }
 
 @keyframes rotate {
@@ -1227,7 +1227,7 @@ html, body {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--flora-primary), var(--flora-accent));
+    background: linear-gradient(90deg, var(--Lumon-primary), var(--Lumon-accent));
     border-radius: 2px;
     animation: progress 3s ease-in-out infinite;
 }
@@ -1329,13 +1329,13 @@ html, body {
 }
 
 .theme-option:hover {
-    border-color: var(--flora-primary);
-    color: var(--flora-primary);
+    border-color: var(--Lumon-primary);
+    color: var(--Lumon-primary);
 }
 
 .theme-option.active {
-    background: var(--flora-primary);
-    border-color: var(--flora-primary);
+    background: var(--Lumon-primary);
+    border-color: var(--Lumon-primary);
     color: white;
 }
 
@@ -1465,7 +1465,7 @@ html, body {
 }
 
 .chat-container::-webkit-scrollbar-thumb:hover {
-    background: var(--flora-primary);
+    background: var(--Lumon-primary);
 }
 
 /* Side Menu Styles */
@@ -1662,7 +1662,7 @@ html[data-theme="light"] .menu-option:hover {
 
 /* Focus states for accessibility */
 button:focus-visible {
-    outline: 2px solid var(--flora-primary);
+    outline: 2px solid var(--Lumon-primary);
     outline-offset: 2px;
 }
 

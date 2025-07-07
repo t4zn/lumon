@@ -1,6 +1,6 @@
-// Flora Landing Page - Advanced 3D Experience
+// Lumon Landing Page - Advanced 3D Experience
 
-class FloraLanding {
+class LumonLanding {
     constructor() {
         this.init3DScene();
         this.initAnimations();
@@ -492,7 +492,7 @@ class FloraLanding {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new FloraLanding();
+    new LumonLanding();
     
     // Fallback button fix - ensure it's always visible
     setTimeout(() => {

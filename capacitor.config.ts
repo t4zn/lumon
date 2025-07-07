@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.flora.app',
-  appName: 'Flora - AI Plant Expert',
+  appId: 'com.Lumon.app',
+  appName: 'Lumon - AI Plant Expert',
   webDir: 'dist',
   server: {
     androidScheme: 'https'
