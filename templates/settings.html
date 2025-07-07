@@ -33,10 +33,10 @@
                     <div class="setting-content">
                         <h3>Profile Picture</h3>
                         <p>Change your profile photo</p>
-                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Profile Picture')">
-                            <i class="fas fa-camera"></i>
-                            Upload Photo
-                        </button>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-camera"></i>
+    Upload Photo
+</button>
                     </div>
                 </div>
                 
@@ -48,10 +48,10 @@
                     <div class="setting-content">
                         <h3>Username</h3>
                         <p>Update your display name</p>
-                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Username')">
-                            <i class="fas fa-edit"></i>
-                            Edit Name
-                        </button>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-edit"></i>
+    Edit Name
+</button>
                     </div>
                 </div>
                 
@@ -91,10 +91,10 @@
                     <div class="setting-content">
                         <h3>Terms & Conditions</h3>
                         <p>View our terms of service</p>
-                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Terms & Conditions')">
-                            <i class="fas fa-external-link-alt"></i>
-                            View Terms
-                        </button>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-external-link-alt"></i>
+    View Terms
+</button>
                     </div>
                 </div>
                 
@@ -106,28 +106,15 @@
                     <div class="setting-content">
                         <h3>Change Password</h3>
                         <p>Update your account password</p>
-                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Change Password')">
-                            <i class="fas fa-key"></i>
-                            Change Password
-                        </button>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-key"></i>
+    Change Password
+</button>
                     </div>
                 </div>
                 
                 <!-- Help -->
                 <div class="setting-item">
-                    <div class="setting-icon">
-                        <i class="fas fa-question-circle"></i>
-                    </div>
-                    <div class="setting-content">
-                        <h3>Help</h3>
-                        <p>Get support and FAQ</p>
-                        <button class="setting-btn placeholder-btn" onclick="showPlaceholder('Help')">
-                            <i class="fas fa-life-ring"></i>
-                            Get Help
-                        </button>
-                    </div>
-                </div>
-                
                 <!-- Logout -->
                 <div class="setting-item logout-item">
                     <div class="setting-icon">
@@ -136,10 +123,10 @@
                     <div class="setting-content">
                         <h3>Logout</h3>
                         <p>Sign out of your account</p>
-                        <button class="setting-btn logout-btn" onclick="showPlaceholder('Logout')">
-                            <i class="fas fa-power-off"></i>
-                            Sign Out
-                        </button>
+                        <button class="setting-btn logout-btn">
+    <i class="fas fa-power-off"></i>
+    Sign Out
+</button>
                     </div>
                 </div>
             </div>
@@ -153,7 +140,18 @@
     </div>
 
     <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='countries.js') }}"></script>
     <script src="{{ url_for('static', filename='settings_script.js') }}"></script>
+    <style>
+    .country-option .flag {
+      font-size: 1.3em;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+    .country-option .country-name {
+      vertical-align: middle;
+    }
+    </style>
     <script>
         function navigateToApp() {
             transitionToPage('/app');
@@ -191,5 +189,89 @@
             }, 3000);
         }
     </script>
+  <!-- Modal root (populated by JS) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+.lumon-modal-backdrop {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(10,30,20,0.55); z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.lumon-modal-box {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  min-width: 320px; max-width: 90vw;
+  border-radius: 18px;
+  z-index: 1001; padding: 0 0 20px 0;
+  animation: fadeIn .2s;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.93) 0%, rgba(2,6,23,0.97) 100%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.36), 0 1.5px 32px 0 rgba(16,185,129,0.22);
+  font-family: 'Inter', Arial, sans-serif;
+  color: #e6fff3;
+  border: 1.5px solid rgba(16,185,129,0.4);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+.lumon-modal-title {
+  padding: 18px 24px 6px 24px; font-size: 1.3rem; font-weight: 700;
+  color: #a7ffce; text-shadow: 0 1px 8px #005e3c44, 0 0.5px 0 #0009;
+  font-family: 'Inter', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+.lumon-modal-content {
+  padding: 0 24px 12px 24px;
+  color: #e6fff3;
+  font-size: 1rem;
+  max-height: 280px;
+  overflow-y: auto;
+  font-family: 'Inter', Arial, sans-serif;
+  text-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end; padding: 0 24px;
+}
+.lumon-modal-btn {
+  background: linear-gradient(90deg,#1b8d5c 60%,#138a6c 100%);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  font-family: 'Inter', Arial, sans-serif;
+  font-weight: 600;
+  box-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-btn.cancel {
+  background: #222b25;
+  color: #a7ffce;
+  border: 1px solid #1b8d5c;
+  border-radius: 4px;
+}
+.lumon-modal-btn.confirm:hover { background: #176b45; }
+.lumon-modal-btn.cancel:hover { background: #333; }
+.lumon-modal-input {
+  width: 100%; margin: 0 0 10px 0; padding: 8px; font-size: 1rem;
+  border: 1px solid #1b8d5c; border-radius: 6px; outline: none;
+  background: rgba(2,6,23,0.85);
+  color: #a7ffce;
+  font-family: 'Inter', Arial, sans-serif;
+  box-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-input:focus {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.10);
+}
+@media (max-width: 500px) {
+  .lumon-modal-box { min-width: 90vw; }
+  .lumon-modal-title, .lumon-modal-content, .lumon-modal-actions { padding-left: 8px; padding-right: 8px; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%,-55%); }
+  to { opacity: 1; transform: translate(-50%,-50%); }
+}
+.lumon-terms-content ul { padding-left: 1.2em; }
+.lumon-terms-content li { margin-bottom: 0.5em; }
+.lumon-terms-content h3 { margin-top: 0; }
+</style>
 </body>
 </html>
