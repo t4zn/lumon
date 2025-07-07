@@ -785,16 +785,6 @@ def callback():
         logging.error(f"Error authenticating user: {e}")
         return render_template('error.html', error='Authentication failed')
 
-@app.route('/logout')
-def logout():
-    # Logout user from Supabase
-    try:
-        auth.sign_out()
-        return redirect(url_for('index'))
-    except Exception as e:
-        # Handle logout error
-        logging.error(f"Error logging out user: {e}")
-        return render_template('error.html', error='Logout failed')
 
 @app.route('/app')
 def index():
