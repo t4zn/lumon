@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flora - Page 0</title>
+    <title>Flora - Auth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -25,22 +28,18 @@
             
             <!-- Navigation Buttons -->
             <div class="navigation-buttons">
-                <button class="nav-btn" onclick="navigateToPage1()">
-                    <span class="btn-text">1</span>
+                <button class="nav-btn" onclick="navigateToPage2()">
+                    <span class="btn-text">Get Started</span>
                 </button>
                 <button class="nav-btn" onclick="navigateToApp()">
-                    <span class="btn-text">2</span>
+                    <span class="btn-text">Start as Guest</span>
                 </button>
             </div>
         </div>
         
         <!-- Top buttons outside content wrapper -->
-        <button class="nav-btn top-left" onclick="navigateToPage3()">
-            <span class="btn-text">Page3</span>
-        </button>
-        
-        <button class="nav-btn top-right" onclick="navigateToPage2()">
-            <span class="btn-text">3</span>
+        <button class="nav-btn top-left" onclick="navigateToPage1()">
+            <span class="btn-text">Login</span>
         </button>
     </div>
 
@@ -55,10 +54,6 @@
         }
         
         function navigateToPage2() {
-            transitionToPage('/page2');
-        }
-        
-        function navigateToPage3() {
             transitionToPage('/page2');
         }
         
