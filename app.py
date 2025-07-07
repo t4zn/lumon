@@ -1390,6 +1390,10 @@ def landing():
 def settings():
     return render_template('settings.html')
 
+@app.route('/history')
+def history():
+    return render_template('history.html')
+
 @app.route('/page0')
 def page0():
     return render_template('page0.html')

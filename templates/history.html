@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lumon - History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
+            background: #000 !important;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        .page-container {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .history-header {
+            width: 100vw;
+            max-width: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px 24px 12px 24px;
+            position: relative;
+        }
+        .history-title {
+            font-size: 2rem;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+        }
+        .history-title i {
+            margin-right: 12px;
+            color: #10b981;
+            font-size: 1.4em;
+        }
+        .delete-history-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: color 0.2s;
+            position: absolute;
+            right: 24px;
+            top: 36px;
+        }
+        .delete-history-btn:hover {
+            color: #ff6b6b;
+        }
+        .history-list {
+            width: 100vw;
+            max-width: 420px;
+            padding: 0 24px 24px 24px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .history-item {
+            background: rgba(16,185,129,0.09);
+            border-radius: 14px;
+            padding: 16px 18px;
+            color: #fff;
+            font-size: 1.08rem;
+            box-shadow: 0 2px 10px #005e3c22;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .history-empty {
+            color: #aaa;
+            font-size: 1.08rem;
+            text-align: center;
+            margin-top: 56px;
+        }
+        /* Leaf/floating animation */
+        .floating-elements-3d {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="floating-elements-3d"></div>
+        <div class="history-header">
+            <div class="history-title">
+                <i class="fas fa-history"></i>
+                History
+            </div>
+            <button class="delete-history-btn" title="Delete All History" onclick="deleteHistory()">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="history-list" id="history-list">
+            <!-- History items will be injected here -->
+        </div>
+        <div class="history-empty" id="history-empty" style="display:none;">
+            No history found.
+        </div>
+    </div>
+    <script>
+    // Dummy data for demo; replace with actual user history fetch
+    const userHistory = JSON.parse(localStorage.getItem('lumon_history') || '[]');
+    const historyList = document.getElementById('history-list');
+    const historyEmpty = document.getElementById('history-empty');
+
+    function renderHistory() {
+        historyList.innerHTML = '';
+        if (!userHistory.length) {
+            historyEmpty.style.display = 'block';
+            return;
+        }
+        historyEmpty.style.display = 'none';
+        userHistory.forEach((item, idx) => {
+            const el = document.createElement('div');
+            el.className = 'history-item';
+            el.innerHTML = `<span>${item}</span>`;
+            historyList.appendChild(el);
+        });
+    }
+    function deleteHistory() {
+        localStorage.removeItem('lumon_history');
+        userHistory.length = 0;
+        renderHistory();
+    }
+    renderHistory();
+    // Leaf/floating animation loader (reuse from other pages if available)
+    // ...
+    </script>
+</body>
+</html>
