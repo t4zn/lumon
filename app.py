@@ -1383,10 +1383,14 @@ def auth_google_callback():
 
 @app.route('/')
 def landing():
-    # If user is authenticated or guest, go to main app; else redirect to landing page
+    # If user is authenticated or guest, go to main app; else show landing page
     if session.get('authenticated') or session.get('guest'):
         return redirect(url_for('index'))
-    return redirect(url_for('page0'))
+    return render_template('landing.html')
+
+@app.route('/settings')
+def settings():
+    return render_template('settings.html')
 
 @app.route('/page0')
 def page0():
