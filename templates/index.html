@@ -187,15 +187,68 @@
                             <span class="suggestion" data-text="Tell me about succulents">Tell me about succulents</span>
                         </div>
                     </div>
-                    <button class="send-btn" id="send-btn" disabled>
-  <span class="send-arrow-icon" style="display:inline-block;width:32px;height:32px;vertical-align:middle;">
-    <svg viewBox="0 0 64 64" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="30" fill="#111"/>
-      <path d="M32 44V22" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-      <path d="M24 30l8-8 8 8" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </span>
+                    <button class="send-btn send-btn-3d" id="send-btn" disabled>
+  <svg class="glow-arrow-svg" viewBox="0 0 64 64" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="32" cy="32" r="24" fill="#111"/>
+  <path class="arrow-glow" d="M32 44V22" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+  <path class="arrow-glow" d="M24 30l8-8 8 8" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<style>
+@keyframes arrow-glow {
+  0% { stroke: #fff; filter: drop-shadow(0 0 0px #10b98100); }
+  50% { stroke: #10ff98; filter: drop-shadow(0 0 8px #10ff98cc) drop-shadow(0 0 16px #10ff9888); }
+  100% { stroke: #fff; filter: drop-shadow(0 0 0px #10b98100); }
+}
+.glow-arrow-svg .arrow-glow {
+  animation: arrow-glow 1.6s ease-in-out infinite;
+}
+</style>
 </button>
+<style>
+@keyframes arrow-glow {
+  0% { filter: drop-shadow(0 0 4px #10b98144) drop-shadow(0 0 0px #10b98100); stroke: #fff; }
+  50% { filter: drop-shadow(0 0 16px #10b981cc) drop-shadow(0 0 8px #10b98188); stroke: #10b981; }
+  100% { filter: drop-shadow(0 0 4px #10b98144) drop-shadow(0 0 0px #10b98100); stroke: #fff; }
+}
+.glow-arrow-svg .arrow-glow {
+  animation: arrow-glow 1.9s ease-in-out infinite;
+}
+</style>
+</button>
+<style>
+.send-btn-3d {
+  background: linear-gradient(135deg, #10b981 60%, #0a3b2e 100%);
+  border-radius: 50%;
+  border: none;
+  outline: none;
+  position: relative;
+  transition: box-shadow 0.18s, transform 0.16s;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 48px;
+  max-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0;
+}
+.send-btn-3d:active {
+  transform: scale(0.96);
+}
+.send-btn-3d:enabled:hover {
+  filter: brightness(1.08);
+}
+.send-arrow-icon svg circle {
+  filter: drop-shadow(0 0 8px #10b98166) drop-shadow(0 0 16px #10b98133);
+  transition: filter 0.18s;
+}
+.send-btn-3d:enabled .send-arrow-icon svg circle {
+  filter: drop-shadow(0 0 14px #10b981aa) drop-shadow(0 0 24px #10b98144);
+}
+</style>
                 </div>
                 <div class="attach-options" id="attach-options" style="display: none;">
                     <button class="camera-trigger-btn" id="camera-trigger-btn">
