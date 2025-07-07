@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flora - Login</title>
+    <title>Lumon - Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings_style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -25,16 +26,17 @@
             <div class="page-content">
                 <!-- Login form elements arranged vertically -->
                 <div class="button-list">
-                    <button class="placeholder-btn">Continue with Google</button>
-                    <input type="text" class="placeholder-btn" placeholder="Username or Email">
-                    <input type="password" class="placeholder-btn" placeholder="Password">
-                    <button class="placeholder-btn">Log In</button>
+                    <button class="placeholder-btn" id="google-btn-page1">Continue with Google</button>
+                    <input type="text" class="placeholder-btn" placeholder="Username or Email" id="login-email">
+                    <input type="password" class="placeholder-btn" placeholder="Password" id="login-password">
                 </div>
                 
+                <!-- Error message -->
+                <div id="login-error" style="color:#ff6b6b; margin:10px 0; display:none;"></div>
                 <!-- Active navigation button -->
                 <div class="navigation-buttons centered">
-                    <button class="nav-btn active-btn" onclick="navigateToApp()">
-                        <span class="btn-text">2</span>
+                    <button class="nav-btn active-btn" id="login-btn">
+                        <span class="btn-text">Login</span>
                     </button>
                 </div>
             </div>
@@ -59,6 +61,41 @@
                 window.location.href = url;
             }, 300);
         }
+
+        document.getElementById('login-btn').onclick = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+            if (!email || !password) {
+                errorDiv.textContent = 'Please enter both email and password.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    transitionToPage('/app');
+                } else {
+                    errorDiv.textContent = 'Invalid email or password.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Invalid email or password.';
+                errorDiv.style.display = 'block';
+            }
+        };
+
+        document.getElementById('google-btn-page1').onclick = function() {
+            window.location.href = '/auth/google';
+        };
     </script>
 </body>
 </html>
