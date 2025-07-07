@@ -13,12 +13,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         html, body {
-          height: 100vh !important;
-          overflow: hidden !important;
-        }
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
     </style>
 </head>
-<body style="background: #000 !important; height: 100vh; overflow: hidden;">
+<body style="background: #000 !important; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;">
 <style>
 .nav-btn, .btn-text, .placeholder-btn { color: #fff !important; }
 .google-3d-logo {
@@ -51,7 +54,7 @@ input, textarea {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;"><path d="M15 18l-6-6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
         
-        <div class="content-wrapper" style="margin-top: 96px;">
+        <div class="content-wrapper" style="margin-top: 0; width: 100vw; max-width: 420px; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center;">
             <!-- Page Content -->
             <div class="page-content">
                 <!-- Login form elements arranged vertically -->
