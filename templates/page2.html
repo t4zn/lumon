@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumon - Sign Up</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Flora - Page 2</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='settings_style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -24,22 +20,18 @@
         <div class="content-wrapper">
             <!-- Page Content -->
             <div class="page-content">
-                <!-- Signup form elements arranged vertically -->
+                <!-- Placeholder buttons arranged vertically -->
                 <div class="button-list">
-                    <input type="text" class="placeholder-btn" placeholder="Username" id="register-username">
-                    <input type="email" class="placeholder-btn" placeholder="Email" id="register-email">
-                    <input type="password" class="placeholder-btn" placeholder="Password" id="register-password">
-                    <input type="password" class="placeholder-btn" placeholder="Confirm Password" id="register-confirm">
+                    <button class="placeholder-btn"></button>
+                    <button class="placeholder-btn"></button>
+                    <button class="placeholder-btn"></button>
+                    <button class="placeholder-btn"></button>
                 </div>
-                <!-- Success message -->
-                <div id="register-success" style="color:#00ff88; margin:10px 0; display:none;"></div>
-                <!-- Error message -->
-                <div id="register-error" style="color:#ff6b6b; margin:10px 0; display:none;"></div>
                 
                 <!-- Active navigation button -->
                 <div class="navigation-buttons centered">
-                    <button class="nav-btn active-btn" id="register-btn">
-                        <span class="btn-text">Create Account</span>
+                    <button class="nav-btn active-btn" onclick="navigateToApp()">
+                        <span class="btn-text">2</span>
                     </button>
                 </div>
             </div>
@@ -64,48 +56,6 @@
                 window.location.href = url;
             }, 300);
         }
-
-        document.getElementById('register-btn').onclick = async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('register-username').value.trim();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value;
-            const confirm = document.getElementById('register-confirm').value;
-            const errorDiv = document.getElementById('register-error');
-            const successDiv = document.getElementById('register-success');
-            errorDiv.style.display = 'none';
-            errorDiv.textContent = '';
-            successDiv.style.display = 'none';
-            successDiv.textContent = '';
-            if (!username || !email || !password || !confirm) {
-                errorDiv.textContent = 'Please fill all fields.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            if (password !== confirm) {
-                errorDiv.textContent = 'Passwords do not match.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            try {
-                const res = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    successDiv.textContent = 'Registration successful! Please check your email and confirm your account before logging in.';
-                    successDiv.style.display = 'block';
-                } else {
-                    errorDiv.textContent = data.error || 'Registration failed.';
-                    errorDiv.style.display = 'block';
-                }
-            } catch (err) {
-                errorDiv.textContent = 'Network error.';
-                errorDiv.style.display = 'block';
-            }
-        };
     </script>
 </body>
 </html>
