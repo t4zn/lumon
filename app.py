@@ -788,10 +788,8 @@ def callback():
 
 @app.route('/app')
 def index():
-    """Main app page"""
-    # Allow both authenticated and guest users
-    if not session.get('authenticated') and not session.get('guest'):
-        return redirect(url_for('page0'))
+    """Main app page (DEV: allow all users for guest testing)"""
+    # DEV: Allow any user to access /app for guest testing, no session check
     cleanup_old_uploads()
     return render_template('index.html')
 

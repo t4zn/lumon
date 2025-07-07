@@ -35,9 +35,9 @@
                 <button class="nav-btn" id="google-btn-page0" type="button">
                     <span class="btn-text"><i class="fab fa-google"></i> Continue with Google</span>
                 </button>
-                <button class="nav-btn" onclick="navigateToApp()">
-                    <span class="btn-text">Start as Guest</span>
-                </button>
+                <button class="nav-btn" id="guest-btn">
+    <span class="btn-text">Start as Guest</span>
+</button>
             </div>
         </div>
         
@@ -48,36 +48,51 @@
     </div>
 
     <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
-    <script>
-        function navigateToPage1() {
-            transitionToPage('/page1');
-        }
-        
-        function navigateToApp() {
-            transitionToPage('/app');
-        }
-        
-        function navigateToPage2() {
-            transitionToPage('/page2');
-        }
-        
-        document.getElementById('google-btn-page0').onclick = function() {
-            window.location.href = '/auth/google';
-        };
-        
-        document.querySelector('button[onclick="navigateToApp()"]').onclick = async function() {
-            await fetch('/api/guest', {method: 'POST'});
-            transitionToPage('/app');
-        };
-        
-        function transitionToPage(url) {
-            document.querySelector('.page-container').style.transform = 'scale(0.9)';
-            document.querySelector('.page-container').style.opacity = '0';
-            
-            setTimeout(() => {
-                window.location.href = url;
-            }, 300);
-        }
-    </script>
+<script>
+    function navigateToPage1() {
+        transitionToPage('/page1');
+    }
+    function navigateToPage2() {
+        transitionToPage('/page2');
+    }
+    document.getElementById('google-btn-page0').onclick = function() {
+        window.location.href = '/auth/google';
+    };
+    document.getElementById('guest-btn').onclick = function() {
+    transitionToPage('/app');
+};
+    function transitionToPage(url) {
+        document.querySelector('.page-container').style.transform = 'scale(0.9)';
+        document.querySelector('.page-container').style.opacity = '0';
+        setTimeout(() => {
+            window.location.href = url;
+        }, 300);
+    }
+</script>
+<style>
+@media (max-width: 480px) {
+    .page-container {
+        min-height: 100vh;
+        padding: 0 2vw;
+    }
+    .content-wrapper {
+        min-height: 80vh;
+        justify-content: center;
+        padding-top: 10vh;
+        padding-bottom: 10vh;
+    }
+    .navigation-buttons {
+        gap: 18px;
+    }
+    .Lumon-title {
+        font-size: 7vw;
+    }
+    .nav-btn {
+        font-size: 4vw;
+        min-height: 48px;
+        border-radius: 24px;
+    }
+}
+</style>
 </body>
 </html>
