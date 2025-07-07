@@ -19,103 +19,107 @@
             <i class="fas fa-arrow-left"></i>
         </button>
 
-        <!-- Flora Branding -->
-        <div class="auth-header">
-            <h1 class="flora-logo">Flora</h1>
-            <p class="flora-tagline">Your AI Plant Expert</p>
-        </div>
-
-        <!-- Auth Options -->
-        <div class="auth-options" id="auth-options">
-            <button class="auth-btn primary" onclick="showSignup()">
-                <i class="fas fa-seedling"></i>
-                <span>Get Started</span>
-            </button>
-            
-            <button class="auth-btn secondary" onclick="showLogin()">
-                <i class="fas fa-sign-in-alt"></i>
-                <span>Login</span>
-            </button>
-            
-            <button class="auth-btn google" onclick="continueWithGoogle()">
-                <i class="fab fa-google"></i>
-                <span>Continue with Google</span>
-            </button>
-            
-            <button class="auth-btn guest" onclick="continueAsGuest()">
-                <i class="fas fa-user"></i>
-                <span>Continue as Guest</span>
-            </button>
-        </div>
-
-        <!-- Login Form -->
-        <div class="auth-form" id="login-form" style="display: none;">
-            <h2>Welcome Back</h2>
-            <p>Sign in to your Flora account</p>
-            
-            <form onsubmit="handleLogin(event)">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" placeholder="Email Address" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Password" required>
-                </div>
-                
-                <button type="submit" class="submit-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Sign In
-                </button>
-            </form>
-            
-            <div class="divider">
-                <span>or</span>
+        <!-- Start .auth-content wrapper -->
+        <div class="auth-content">
+            <!-- Flora Branding -->
+            <div class="auth-header">
+                <h1 class="flora-logo">Flora</h1>
+                <p class="flora-tagline">Your AI Plant Expert</p>
             </div>
-            
-            <button class="auth-btn google" onclick="continueWithGoogle()">
-                <i class="fab fa-google"></i>
-                <span>Continue with Google</span>
-            </button>
-            
-            <button class="link-btn" onclick="showOptions()">Back to options</button>
-        </div>
 
-        <!-- Signup Form -->
-        <div class="auth-form" id="signup-form" style="display: none;">
-            <h2>Join Flora</h2>
-            <p>Create your account to get started</p>
-            
-            <form onsubmit="handleSignup(event)">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" placeholder="Username" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" placeholder="Email Address" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Password" required>
-                </div>
-                
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Confirm Password" required>
-                </div>
-                
-                <button type="submit" class="submit-btn">
+            <!-- Auth Options -->
+            <div class="auth-options" id="auth-options">
+                <button class="auth-btn primary" onclick="showSignup()">
                     <i class="fas fa-seedling"></i>
-                    Create Account
+                    <span>Get Started</span>
                 </button>
-            </form>
-            
-            <button class="link-btn" onclick="showOptions()">Back to options</button>
+                
+                <button class="auth-btn secondary" onclick="showLogin()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </button>
+                
+                <button class="auth-btn google" onclick="continueWithGoogle()">
+                    <i class="fab fa-google"></i>
+                    <span>Continue with Google</span>
+                </button>
+                
+                <button class="auth-btn guest" onclick="continueAsGuest()">
+                    <i class="fas fa-user"></i>
+                    <span>Continue as Guest</span>
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <div class="auth-form" id="login-form" style="display: none;">
+                <h2>Welcome Back</h2>
+                <p>Sign in to your Flora account</p>
+                
+                <form onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" placeholder="Email Address" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Password" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <button class="auth-btn google" onclick="continueWithGoogle()">
+                    <i class="fab fa-google"></i>
+                    <span>Continue with Google</span>
+                </button>
+                
+                <button class="link-btn" onclick="showOptions()">Back to options</button>
+            </div>
+
+            <!-- Signup Form -->
+            <div class="auth-form" id="signup-form" style="display: none;">
+                <h2>Join Flora</h2>
+                <p>Create your account to get started</p>
+                
+                <form onsubmit="handleSignup(event)">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" placeholder="Username" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" placeholder="Email Address" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Password" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Confirm Password" required>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-seedling"></i>
+                        Create Account
+                    </button>
+                </form>
+                
+                <button class="link-btn" onclick="showOptions()">Back to options</button>
+            </div>
         </div>
+        <!-- End .auth-content wrapper -->
     </div>
 
     <script src="{{ url_for('static', filename='auth.js') }}"></script>

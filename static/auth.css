@@ -378,3 +378,20 @@
         transform: translateY(-5px);
     }
 }
+
+.auth-content {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-header,
+.auth-options,
+.auth-form {
+    margin-left: auto;
+    margin-right: auto;
+}
