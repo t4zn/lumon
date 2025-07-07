@@ -2,9 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    --flora-primary: #00ff88;
-    --flora-secondary: #00cc6a;
-    --flora-accent: #66ffaa;
+    --flora-primary: #10b981;
+    --flora-secondary: #059669;
+    --flora-accent: #34d399;
+    --flora-emerald: #50c878;
+    --flora-mint: #98fb98;
     --bg-dark: #0a0a0a;
     --bg-secondary: #111111;
     --text-primary: rgba(255, 255, 255, 0.9);
@@ -15,8 +17,11 @@
     --spacing-lg: 32px;
     --spacing-xl: 48px;
     --border-radius: 25px;
-    --shadow-soft: 0 8px 32px rgba(0, 255, 136, 0.15);
-    --shadow-glow: 0 0 20px rgba(0, 255, 136, 0.3);
+    --shadow-soft: 0 8px 32px rgba(16, 185, 129, 0.15);
+    --shadow-glow: 0 0 40px rgba(16, 185, 129, 0.3);
+    --gradient-primary: linear-gradient(135deg, var(--flora-primary), var(--flora-accent));
+    --gradient-secondary: linear-gradient(135deg, var(--flora-secondary), var(--flora-emerald));
+    --gradient-glow: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent);
 }
 
 * {
