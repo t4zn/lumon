@@ -145,8 +145,9 @@ html, body {
             No history found.
         </div>
     </div>
+    <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
     <script>
-    // Dummy data for demo; replace with actual user history fetch
+// Dummy data for demo; replace with actual user history fetch
 const userHistory = JSON.parse(localStorage.getItem('lumon_history') || '[]');
 const historyList = document.getElementById('history-list');
 const historyEmpty = document.getElementById('history-empty');
@@ -165,49 +166,46 @@ function renderHistory() {
         historyList.appendChild(el);
     });
 }
+
 function deleteHistory() {
+    // Show confirmation modal
+    showDeleteModal();
+}
+
+function confirmDeleteHistory() {
     localStorage.removeItem('lumon_history');
     userHistory.length = 0;
     renderHistory();
-}
-renderHistory();
-// 3D floating leaf animation loader from page0
-if (typeof THREE !== 'undefined') {
-  function createLeaf() {
-    const leaf = document.createElement('div');
-    leaf.className = 'floating-leaf';
-    leaf.style.position = 'absolute';
-    leaf.style.left = Math.random() * 100 + 'vw';
-    leaf.style.top = Math.random() * 100 + 'vh';
-    leaf.style.opacity = Math.random() * 0.5 + 0.5;
-    leaf.style.transform = `scale(${Math.random() * 0.5 + 0.6})`;
-    leaf.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M16 2C8 2 2 8 2 16s6 14 14 14 14-6 14-14S24 2 16 2z" fill="#10b981"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#fff"/></svg>';
-    return leaf;
-  }
-  const container = document.querySelector('.floating-elements-3d');
-  if (container) {
-    for (let i = 0; i < 8; i++) {
-      const leaf = createLeaf();
-      container.appendChild(leaf);
-      animateLeaf(leaf);
-    }
-  }
-  function animateLeaf(leaf) {
-    let angle = Math.random() * 2 * Math.PI;
-    let speed = 0.2 + Math.random() * 0.3;
-    let amplitude = 10 + Math.random() * 10;
-    let baseTop = parseFloat(leaf.style.top);
-    function frame() {
-      angle += 0.01 * speed;
-      let x = parseFloat(leaf.style.left);
-      leaf.style.top = (baseTop + Math.sin(angle) * amplitude) + 'vh';
-      leaf.style.left = (x + Math.cos(angle) * 0.1) + 'vw';
-      requestAnimationFrame(frame);
-    }
-    frame();
-  }
+    closeDeleteModal();
 }
 
+function showDeleteModal() {
+    let modal = document.getElementById('lumon-delete-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'lumon-delete-modal';
+        modal.innerHTML = `
+        <div class="lumon-modal-backdrop"></div>
+        <div class="lumon-modal-box">
+            <div class="lumon-modal-title">Confirm Delete</div>
+            <div class="lumon-modal-content">Are you sure you want to delete all your history? This action cannot be undone.</div>
+            <div class="lumon-modal-actions">
+                <button class="lumon-modal-btn cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="lumon-modal-btn confirm" onclick="confirmDeleteHistory()">Delete</button>
+            </div>
+        </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        modal.style.display = 'block';
+    }
+}
+function closeDeleteModal() {
+    let modal = document.getElementById('lumon-delete-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+renderHistory();
     </script>
 </body>
 </html>

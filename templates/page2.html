@@ -173,5 +173,28 @@ input, textarea {
             }
         };
     </script>
+<div id="exit-toast" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);color:#fff;padding:12px 28px;border-radius:24px;font-size:1.08em;z-index:9999;box-shadow:0 2px 16px #10b98144;opacity:0;pointer-events:none;transition:opacity 0.3s;"></div>
+<script>
+let backPressedOnce = false;
+function showExitToast() {
+    let toast = document.getElementById('exit-toast');
+    toast.style.display = 'block';
+    toast.textContent = 'Double tap back to exit app';
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 1400);
+}
+window.history.pushState({ page: 1 }, "", window.location.href);
+window.addEventListener('popstate', function handler(e) {
+    if (!backPressedOnce) {
+        showExitToast();
+        backPressedOnce = true;
+        window.history.pushState({ page: 1 }, "", window.location.href);
+        setTimeout(() => { backPressedOnce = false; }, 1500);
+    } else {
+        window.removeEventListener('popstate', handler);
+        window.history.back();
+    }
+});
+</script>
 </body>
 </html>
