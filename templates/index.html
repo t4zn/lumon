@@ -1,333 +1,325 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lumon - Plant Identifier</title>
-    
-    <!-- Font Awesome for icons -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lumon - Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='page_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='settings_style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Three.js for 3D effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- GSAP for animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style_mobile_fixes.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='mobile-viewport-fix.css') }}">
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: relative;
+            background: #000;
+        }
+        
+        body {
+            overscroll-behavior-y: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .page-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+        }
+        
+        .settings-container {
+            width: 100%;
+            max-width: 100%;
+            padding: 16px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @media (min-width: 480px) {
+            .settings-container {
+                max-width: 420px;
+                padding: 24px 16px;
+            }
+        }
+    </style>
 </head>
-<body style="background: #000 !important;">
-    <!-- 3D Background Canvas -->
-    <canvas id="bg-canvas"></canvas>
-    
-    <!-- Floating 3D Elements -->
-    <div class="floating-3d-elements">
-        <div class="leaf-particle leaf-1"></div>
-        <div class="leaf-particle leaf-2"></div>
-        <div class="leaf-particle leaf-3"></div>
-        <div class="pollen-particle pollen-1"></div>
-        <div class="pollen-particle pollen-2"></div>
-    </div>
-
-    <div class="mobile-app">
-        <!-- Custom Status Bar (hidden by default) -->
-        <div class="status-bar" style="display: none;">
-            <div class="status-left">
-                <span class="time" id="current-time">10:41</span>
-            </div>
-            <div class="status-right">
-                <i class="fas fa-signal"></i>
-                <i class="fas fa-wifi"></i>
-                <span class="battery">71%</span>
-                <i class="fas fa-battery-three-quarters"></i>
-            </div>
-        </div>
-
-        <!-- Header with Menu -->
-        <div class="app-header">
-            <div class="header-left">
-                <button class="menu-btn" id="menu-btn">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
-            <div class="header-center">
-                <h1 class="app-title">Lumon</h1>
-            </div>
-
-        </div>
-
-        <!-- Side Menu -->
-        <div class="side-menu" id="side-menu">
-            <div class="menu-content">
-                <div class="menu-header">
-                    <h3>Chat Options</h3>
-                    <button class="menu-close" id="menu-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="menu-options" style="padding-top: 15px;">
-                    <button class="menu-option" id="new-chat">
-                        <i class="fas fa-plus"></i>
-                        <span>Start New Chat</span>
-                    </button>
-                    <a href="{{ url_for('history') }}" style="text-decoration:none;">
-  <button class="menu-option" id="history-btn" type="button">
-    <i class="fas fa-history"></i>
-    <span>History</span>
-  </button>
-</a>
-                    <button class="menu-option" id="settings-btn">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="menu-overlay" id="menu-overlay"></div>
-
-        <!-- Chat Container -->
-        <div class="chat-container" id="chat-container">
-            <!-- Welcome Message -->
-            <div class="chat-message bot-message" id="welcome-message">
-                <div class="message-avatar">
-                    <div class="avatar-glow">
-                        <i class="fas fa-seedling"></i>
-                    </div>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">
-                        <div class="typing-animation" id="initial-typing">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <div class="message-text" id="initial-message" style="display: none;">
-                            <p>Hello! I'm Lumon, your advanced AI botanist with deep expertise in plant science.</p>
-                            <p>I can identify plants, answer botanical questions, provide care advice, and discuss plant biology. Ask me anything about plants!</p>
-                            <p><strong>Try saying:</strong> "What's this plant?" or "How do I care for succulents?"</p>
-                        </div>
-                    </div>
-                    <div class="message-time">Now</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Camera Interface -->
-        <div class="camera-interface" id="camera-interface" style="display: none;">
-            <div class="camera-header">
-                <button class="camera-close" id="camera-close">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h2 class="camera-title">Identify Plants Around You</h2>
-                <button class="camera-done" id="camera-done">Done</button>
-            </div>
+<body>
+    <div class="page-container">
+        <div class="floating-elements-3d"></div>
+        
+        <!-- Back button -->
+        <button class="back-btn" onclick="navigateToApp()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;"><path d="M15 18l-6-6 6-6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        
+        <div class="settings-container">
+            <h1 class="settings-title animated-glow">
+    <i class="fas fa-cog rotating-gear"></i>
+    Settings
+</h1>
             
-            <div class="camera-viewfinder">
-                <video id="camera-video" autoplay playsinline></video>
-                <canvas id="camera-canvas" style="display: none;"></canvas>
+            <div class="settings-grid">
+                <!-- Profile Picture -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+    <i class="fas fa-user-circle"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Profile Picture</h3>
+                        <p>Change your profile photo</p>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-camera"></i>
+    Upload Photo
+</button>
+                    </div>
+                </div>
                 
-                <div class="camera-overlay">
-                    <div class="focus-ring" id="focus-ring"></div>
-                    <div class="scan-lines"></div>
-                </div>
-            </div>
-            
-            <div class="camera-controls">
-                <button class="gallery-btn" id="gallery-btn">
-                    <i class="fas fa-images"></i>
-                </button>
-                <button class="capture-btn" id="capture-btn">
-                    <div class="capture-ring">
-                        <div class="capture-inner"></div>
-                    </div>
-                </button>
-                <button class="flash-btn" id="flash-btn">
-                    <i class="fas fa-bolt"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Input Controls -->
-        <div class="input-area">
-            <form id="upload-form" enctype="multipart/form-data">
-                <input type="file" 
-                       id="image-input" 
-                       name="image" 
-                       accept="image/*"
-                       style="display: none;">
-                <input type="file" 
-                       id="camera-input" 
-                       name="camera" 
-                       accept="image/*" 
-                       capture="environment"
-                       style="display: none;">
-            </form>
-            
-            <div class="chat-input-container">
-                <div class="input-row">
-                    <button class="attach-btn" id="attach-btn">
-                        <i class="fas fa-paperclip"></i>
-                    </button>
-                    <div class="text-input-wrapper">
-                        <input type="text" 
-                               id="text-input" 
-                               placeholder="Ask me about plants..." 
-                               class="text-input"
-                               maxlength="500">
-                        <div class="input-suggestions" id="input-suggestions">
-                            <span class="suggestion" data-text="What's this plant?">What's this plant?</span>
-                            <span class="suggestion" data-text="How do I care for roses?">How do I care for roses?</span>
-                            <span class="suggestion" data-text="Tell me about succulents">Tell me about succulents</span>
-                        </div>
-                    </div>
-                    <button class="send-btn send-btn-3d" id="send-btn" disabled>
-  <svg class="glow-arrow-svg" viewBox="0 0 64 64" width="44" height="44" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="32" cy="32" r="24" fill="#111"/>
-  <path class="arrow-glow" d="M32 44V22" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
-  <path class="arrow-glow" d="M24 30l8-8 8 8" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
-<style>
-@keyframes arrow-glow {
-  0% { stroke: #fff; filter: drop-shadow(0 0 0px #10b98100); }
-  50% { stroke: #10ff98; filter: drop-shadow(0 0 8px #10ff98cc) drop-shadow(0 0 16px #10ff9888); }
-  100% { stroke: #fff; filter: drop-shadow(0 0 0px #10b98100); }
-}
-.glow-arrow-svg .arrow-glow {
-  animation: arrow-glow 1.6s ease-in-out infinite;
-}
-</style>
+                <!-- Username -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+    <i class="fas fa-user-edit"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Username</h3>
+                        <p>Update your display name</p>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-edit"></i>
+    Edit Name
 </button>
-<style>
-@keyframes arrow-glow {
-  0% { filter: drop-shadow(0 0 4px #10b98144) drop-shadow(0 0 0px #10b98100); stroke: #fff; }
-  50% { filter: drop-shadow(0 0 16px #10b981cc) drop-shadow(0 0 8px #10b98188); stroke: #10b981; }
-  100% { filter: drop-shadow(0 0 4px #10b98144) drop-shadow(0 0 0px #10b98100); stroke: #fff; }
-}
-.glow-arrow-svg .arrow-glow {
-  animation: arrow-glow 1.9s ease-in-out infinite;
-}
-</style>
-</button>
-<style>
-.send-btn-3d {
-  background: linear-gradient(135deg, #10b981 60%, #0a3b2e 100%);
-  border-radius: 50%;
-  border: none;
-  outline: none;
-  position: relative;
-  transition: box-shadow 0.18s, transform 0.16s;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  max-width: 48px;
-  max-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0;
-}
-.send-btn-3d:active {
-  transform: scale(0.96);
-}
-.send-btn-3d:enabled:hover {
-  filter: brightness(1.08);
-}
-.send-arrow-icon svg circle {
-  filter: drop-shadow(0 0 8px #10b98166) drop-shadow(0 0 16px #10b98133);
-  transition: filter 0.18s;
-}
-.send-btn-3d:enabled .send-arrow-icon svg circle {
-  filter: drop-shadow(0 0 14px #10b981aa) drop-shadow(0 0 24px #10b98144);
-}
-</style>
-                </div>
-                <div class="attach-options" id="attach-options" style="display: none;">
-                    <button class="camera-trigger-btn" id="camera-trigger-btn">
-                        <i class="fas fa-camera"></i>
-                        <span>Camera</span>
-                    </button>
-                    <button class="gallery-trigger-btn" id="gallery-trigger-btn">
-                        <i class="fas fa-images"></i>
-                        <span>Gallery</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loading-overlay" style="display: none;">
-            <div class="loading-content">
-                <div class="dna-spinner">
-                    <div class="dna-helix">
-                        <div class="strand strand-1"></div>
-                        <div class="strand strand-2"></div>
                     </div>
                 </div>
-                <h3 class="loading-title">Analyzing Plant</h3>
-                <p class="loading-subtitle">AI is examining botanical features...</p>
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Modal -->
-        <div class="settings-modal" id="settings-modal" style="display: none;">
-            <div class="settings-content">
-                <div class="settings-header">
-                    <h3>Settings</h3>
-                    <button class="settings-close" id="settings-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="settings-body" style="background: #14482f !important;">
-                    <div class="setting-item">
-                        <label>Theme</label>
-                        <div class="theme-options">
-                            <button class="theme-option" data-theme="light">
-                                <i class="fas fa-sun"></i> Light
+                
+                <!-- Country -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+    <i class="fas fa-globe"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Country</h3>
+                        <p>Select your country</p>
+                        <div class="country-dropdown-container">
+                            <button class="setting-btn country-btn" onclick="toggleCountryDropdown()">
+                                <i class="fas fa-flag"></i>
+                                <span id="selected-country">Select Country</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
                             </button>
-                            <button class="theme-option active" data-theme="dark">
-                                <i class="fas fa-moon"></i> Dark
-                            </button>
+                            
+                            <div class="country-dropdown" id="country-dropdown">
+                                <div class="country-search">
+                                    <input type="text" id="country-search" placeholder="Search countries..." onkeyup="filterCountries()">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="country-list" id="country-list">
+                                    <!-- Countries will be populated by JavaScript -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Terms & Conditions -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+    <i class="fas fa-file-contract"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Terms & Conditions</h3>
+                        <p>View our terms of service</p>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-external-link-alt"></i>
+    View Terms
+</button>
+                    </div>
+                </div>
+                
+                <!-- Change Password -->
+                <div class="setting-item">
+                    <div class="setting-icon">
+    <i class="fas fa-lock"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Change Password</h3>
+                        <p>Update your account password</p>
+                        <button class="setting-btn placeholder-btn">
+    <i class="fas fa-key"></i>
+    Change Password
+</button>
+                    </div>
+                </div>
+                
+                <!-- Help -->
+                <div class="setting-item">
+                <!-- Logout -->
+                <div class="setting-item logout-item">
+                    <div class="setting-icon">
+    <i class="fas fa-sign-out-alt"></i>
+</div>
+                    <div class="setting-content">
+                        <h3>Logout</h3>
+                        <p>Sign out of your account</p>
+                        <button class="setting-btn logout-btn">
+    <i class="fas fa-power-off"></i>
+    Sign Out
+</button>
+                    </div>
+                </div>
             </div>
+        </div>
+        
+        <!-- Notification toast -->
+        <div class="toast" id="toast">
+            <i class="fas fa-info-circle"></i>
+            <span id="toast-message"></span>
         </div>
     </div>
-    
-    <!-- Custom JavaScript -->
-    <script src="{{ url_for('static', filename='script_fixed.js') }}"></script>
-<div id="exit-toast" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.88);color:#fff;padding:12px 28px;border-radius:24px;font-size:1.08em;z-index:9999;box-shadow:0 2px 16px #10b98144;opacity:0;pointer-events:none;transition:opacity 0.3s;"></div>
-<script>
-let backPressedOnce = false;
-function showExitToast() {
-    let toast = document.getElementById('exit-toast');
-    toast.style.display = 'block';
-    toast.textContent = 'Double tap back to exit app';
-    toast.style.opacity = '1';
-    setTimeout(() => { toast.style.opacity = '0'; }, 1400);
-}
-window.history.pushState({ page: 1 }, "", window.location.href);
-window.addEventListener('popstate', function handler(e) {
-    if (!backPressedOnce) {
-        showExitToast();
-        backPressedOnce = true;
-        window.history.pushState({ page: 1 }, "", window.location.href);
-        setTimeout(() => { backPressedOnce = false; }, 1500);
-    } else {
-        window.removeEventListener('popstate', handler);
-        window.history.back();
+
+    <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='countries.js') }}"></script>
+    <script src="{{ url_for('static', filename='settings_script.js') }}"></script>
+    <style>
+    .country-option .flag {
+      font-size: 1.3em;
+      margin-right: 10px;
+      vertical-align: middle;
     }
-});
-</script>
+    .country-option .country-name {
+      vertical-align: middle;
+    }
+    </style>
+    <script>
+        function navigateToApp() {
+            transitionToPage('/app');
+        }
+        
+        function transitionToPage(url) {
+            document.querySelector('.page-container').style.transform = 'scale(0.9)';
+            document.querySelector('.page-container').style.opacity = '0';
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 300);
+        }
+        
+        function showPlaceholder(feature) {
+            showToast(`${feature} feature coming soon!`, 'info');
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            toastMessage.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'flex';
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+    </script>
+  <!-- Modal root (populated by JS) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+.lumon-modal-backdrop {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(10,30,20,0.55); z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+.lumon-modal-box {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%,-50%);
+  min-width: 320px; max-width: 90vw;
+  border-radius: 18px;
+  z-index: 1001; padding: 0 0 20px 0;
+  animation: fadeIn .2s;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.93) 0%, rgba(2,6,23,0.97) 100%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.36), 0 1.5px 32px 0 rgba(16,185,129,0.22);
+  font-family: 'Inter', Arial, sans-serif;
+  color: #e6fff3;
+  border: 1.5px solid rgba(16,185,129,0.4);
+  backdrop-filter: blur(10px) saturate(1.2);
+}
+.lumon-modal-title {
+  padding: 18px 24px 6px 24px; font-size: 1.3rem; font-weight: 700;
+  color: #a7ffce; text-shadow: 0 1px 8px #005e3c44, 0 0.5px 0 #0009;
+  font-family: 'Inter', Arial, sans-serif;
+  letter-spacing: 0.01em;
+}
+.lumon-modal-content {
+  padding: 0 24px 12px 24px;
+  color: #e6fff3;
+  font-size: 1rem;
+  max-height: 280px;
+  overflow-y: auto;
+  font-family: 'Inter', Arial, sans-serif;
+  text-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-actions {
+  display: flex; gap: 10px; justify-content: flex-end; padding: 0 24px;
+}
+.lumon-modal-btn {
+  background: linear-gradient(90deg,#1b8d5c 60%,#138a6c 100%);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 7px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  font-family: 'Inter', Arial, sans-serif;
+  font-weight: 600;
+  box-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-btn.cancel {
+  background: #222b25;
+  color: #a7ffce;
+  border: 1px solid #1b8d5c;
+  border-radius: 4px;
+}
+.lumon-modal-btn.confirm:hover { background: #176b45; }
+.lumon-modal-btn.cancel:hover { background: #333; }
+.lumon-modal-input {
+  width: 100%; margin: 0 0 10px 0; padding: 8px; font-size: 1rem;
+  border: 1px solid #1b8d5c; border-radius: 6px; outline: none;
+  background: rgba(2,6,23,0.85);
+  color: #a7ffce;
+  font-family: 'Inter', Arial, sans-serif;
+  box-shadow: 0 1px 8px #005e3c22;
+}
+.lumon-modal-input:focus {
+  border-color: #10b981;
+  background: rgba(16,185,129,0.10);
+}
+@media (max-width: 500px) {
+  .lumon-modal-box { min-width: 90vw; }
+  .lumon-modal-title, .lumon-modal-content, .lumon-modal-actions { padding-left: 8px; padding-right: 8px; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%,-55%); }
+  to { opacity: 1; transform: translate(-50%,-50%); }
+}
+.lumon-terms-content ul { padding-left: 1.2em; }
+.lumon-terms-content li { margin-bottom: 0.5em; }
+.lumon-terms-content h3 { margin-top: 0; }
+</style>
 </body>
 </html>
