@@ -1,6 +1,6 @@
-// Flora Authentication JavaScript
+// Lumon Authentication JavaScript
 
-class FloraAuth {
+class LumonAuth {
     constructor() {
         this.scene = null;
         this.camera = null;
@@ -226,11 +226,8 @@ function showOptions() {
 // Placeholder functions for authentication (no actual functionality)
 function continueWithGoogle() {
     showLoadingEffect();
-    // Placeholder: Would integrate with Google OAuth
-    setTimeout(() => {
-        alert('Google OAuth integration placeholder - redirecting to app');
-        window.location.href = '/app';
-    }, 1500);
+    // Redirect to backend Google OAuth endpoint
+    window.location.href = '/auth/google';
 }
 
 function continueAsGuest() {
@@ -241,34 +238,65 @@ function continueAsGuest() {
     }, 1000);
 }
 
-function handleLogin(event) {
+async function handleLogin(event) {
     event.preventDefault();
     showLoadingEffect();
-    
-    // Placeholder: Would validate credentials
-    setTimeout(() => {
-        alert('Login placeholder - redirecting to app');
-        window.location.href = '/app';
-    }, 1500);
+    const email = event.target.querySelector('input[type="email"]').value;
+    const password = event.target.querySelector('input[type="password"]').value;
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            if (data.user_confirmed === false) {
+                alert('Please confirm your email before logging in. Check your inbox.');
+                showOptions();
+                return;
+            }
+            window.location.href = '/app';
+        } else {
+            alert(data.error || 'Login failed.');
+            showOptions();
+        }
+    } catch (err) {
+        alert('Network error. Please try again.');
+        showOptions();
+    }
 }
 
-function handleSignup(event) {
+async function handleSignup(event) {
     event.preventDefault();
     showLoadingEffect();
-    
+    const email = event.target.querySelector('input[type="email"]').value;
+    const username = event.target.querySelector('input[name="username"]').value;
     const password = event.target.querySelector('input[type="password"]').value;
     const confirmPassword = event.target.querySelectorAll('input[type="password"]')[1].value;
-    
     if (password !== confirmPassword) {
         alert('Passwords do not match');
+        showOptions();
         return;
     }
-    
-    // Placeholder: Would create account
-    setTimeout(() => {
-        alert('Signup placeholder - redirecting to app');
-        window.location.href = '/app';
-    }, 1500);
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, username })
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert('Registration successful! Please check your email to confirm your account.');
+            showLogin();
+        } else {
+            alert(data.error || 'Signup failed.');
+            showOptions();
+        }
+    } catch (err) {
+        alert('Network error. Please try again.');
+        showOptions();
+    }
 }
 
 function showLoadingEffect() {
@@ -281,5 +309,5 @@ function showLoadingEffect() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new FloraAuth();
+    new LumonAuth();
 });

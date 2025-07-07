@@ -47,7 +47,7 @@ except ImportError as e:
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "flora-secret-key-2024")
+app.secret_key = os.environ.get("SESSION_SECRET", "Lumon-secret-key-2024")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configuration
@@ -224,7 +224,7 @@ def identify_plant_with_plantnet(image_path):
     # Multiple projects for better accuracy and coverage
     projects = [
         "weurope",           # Western Europe - fast and accurate for European plants
-        "k-world-flora",     # Global flora - comprehensive worldwide database
+        "k-world-Lumon",     # Global Lumon - comprehensive worldwide database
         "plantnet-300k",     # Large dataset - 300k species
         "the-plant-list"     # Scientific reference - authoritative names
     ]
@@ -570,7 +570,7 @@ def identify_plant_local(image_path):
                         ("Rhododendron ponticum", "Pontian rhododendron with large flower clusters in spring."),
                         ("Camellia japonica", "Japanese camellia, evergreen with waxy flowers in winter and spring."),
                         ("Hydrangea macrophylla", "Bigleaf hydrangea with pH-dependent flower color changes."),
-                        ("Magnolia grandiflora", "Southern magnolia with large fragrant white flowers and glossy leaves."),
+                        ("Magnolia grandiLumon", "Southern magnolia with large fragrant white flowers and glossy leaves."),
                         ("Prunus serrulata", "Japanese cherry with pink spring blossoms and serrated leaves.")
                     ],
                     'conditions': lambda g, r, y: g > 0.3 and (r > 0.1 or y > 0.08)
@@ -760,15 +760,45 @@ def cleanup_old_uploads():
                 # Delete files older than 1 hour
                 if os.path.isfile(file_path):
                     file_age = os.path.getmtime(file_path)
-                    if (time.time() - file_age) > 3600:
-                        os.remove(file_path)
     except Exception as e:
-        logging.error(f"Error cleaning up uploads: {e}")
+        print(f"Error cleaning up uploads: {e}")
 
-@app.route('/')
-def landing():
-    """Landing page with 3D animations"""
-    return render_template('landing.html')
+@app.route('/confirm')
+def confirm_email():
+    # This is the redirect target for Supabase email confirmation links
+    return render_template('confirm.html')
+
+@app.route('/login')
+def login():
+    # Redirect to Supabase login page
+    return redirect(url_for('auth.sign_in', provider='google'))
+
+@app.route('/callback')
+def callback():
+    # Handle Supabase login callback
+    try:
+        user = auth.user()
+        if user:
+            # User is authenticated, redirect to app page
+            return redirect(url_for('index'))
+        else:
+            # User is not authenticated, show error message
+            return render_template('error.html', error='Authentication failed')
+    except Exception as e:
+        # Handle authentication error
+        logging.error(f"Error authenticating user: {e}")
+        return render_template('error.html', error='Authentication failed')
+
+@app.route('/logout')
+def logout():
+    # Logout user from Supabase
+    try:
+        auth.sign_out()
+        return redirect(url_for('index'))
+    except Exception as e:
+        # Handle logout error
+        logging.error(f"Error logging out user: {e}")
+        return render_template('error.html', error='Logout failed')
 
 @app.route('/app')
 def index():
@@ -887,7 +917,7 @@ def chat():
         # Check if message is plant/botany related
         if not is_botanical_question(user_message):
             return jsonify({
-                'response': "I'm Flora, your botanical expert! I can only help with plant and gardening questions. Please ask me about plant care, identification, botanical facts, or gardening advice.",
+                'response': "I'm Lumon, your botanical expert! I can only help with plant and gardening questions. Please ask me about plant care, identification, botanical facts, or gardening advice.",
                 'type': 'warning'
             })
         
@@ -955,7 +985,7 @@ def generate_botanical_response_with_memory(message, session):
             try:
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                prompt = f"""You are Flora, a concise botanical expert. Provide brief, practical answers (2-3 sentences max).
+                prompt = f"""You are Lumon, a concise botanical expert. Provide brief, practical answers (2-3 sentences max).
 
 {context}Current question: {message}
 
@@ -1010,7 +1040,7 @@ def generate_deepseek_response_with_memory(message, session):
             for msg in recent_messages:
                 context += f"{msg['role'].title()}: {msg['message']}\n"
         
-        prompt = f"""You are Flora, a concise botanical expert. Keep responses under 80 words.
+        prompt = f"""You are Lumon, a concise botanical expert. Keep responses under 80 words.
 
 {context}
 Current question: {message}
@@ -1107,7 +1137,7 @@ def generate_contextual_botanical_response(message, context=""):
     
     # Handle empty or very short messages
     if len(message_lower) < 2:
-        return "I'm Flora, your botanical expert! Ask me about plant care, identification, or any gardening questions."
+        return "I'm Lumon, your botanical expert! Ask me about plant care, identification, or any gardening questions."
     
     # Question word analysis for better matching
     question_words = ['what', 'where', 'when', 'why', 'how', 'which', 'who']
@@ -1170,7 +1200,7 @@ def generate_contextual_botanical_response(message, context=""):
     
     # Greetings and general queries
     elif any(word in message_lower for word in ['hi', 'hello', 'hey', 'thanks', 'thank']) and len(message_lower.split()) <= 3:
-        return "Hello! I'm Flora, your botanical expert. I can help identify plants, provide care advice, troubleshoot problems, and answer gardening questions. What can I help you with?"
+        return "Hello! I'm Lumon, your botanical expert. I can help identify plants, provide care advice, troubleshoot problems, and answer gardening questions. What can I help you with?"
     
     # Season and timing questions
     elif any(word in message_lower for word in ['when', 'season', 'spring', 'summer', 'fall', 'winter', 'time', 'month']):
@@ -1208,56 +1238,65 @@ def get_plant_care_advice(plant_name):
         return ["Provide appropriate light for species", "Water when topsoil feels dry", "Ensure good drainage", "Feed during growing season"]
 
 # Authentication Routes
+
 @app.route('/api/register', methods=['POST'])
 def register():
-    """User registration endpoint"""
+    """User registration endpoint with Supabase email confirmation"""
     try:
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
         username = data.get('username')
-        
+
         if not all([email, password, username]):
             return jsonify({"success": False, "error": "Missing required fields"}), 400
-        
+
         if not SUPABASE_AVAILABLE:
             return jsonify({"success": False, "error": "Database not available"}), 503
-        
-        result = db_service.create_user(email, password, username)
-        
+
+        # Set redirect_to for confirmation link (must match your Flask route)
+        confirm_url = url_for('confirm_email', _external=True)
+        result = db_service.create_user(email, password, username, redirect_to=confirm_url)
+
         if result["success"]:
-            return jsonify(result), 201
+            return jsonify({
+                "success": True,
+                "message": "Registration successful! Please check your email and confirm your account before logging in."
+            }), 201
         else:
-            return jsonify(result), 400
-            
+            return jsonify({"success": False, "error": result.get("error", "Registration failed.")}), 400
+
     except Exception as e:
         logging.error(f"Registration error: {e}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    """User login endpoint"""
+    """User login endpoint with Supabase email confirmation check"""
     try:
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        
+
         if not all([email, password]):
             return jsonify({"success": False, "error": "Missing email or password"}), 400
-        
+
         if not SUPABASE_AVAILABLE:
             return jsonify({"success": False, "error": "Database not available"}), 503
-        
+
         result = db_service.authenticate_user(email, password)
-        
+
         if result["success"]:
-            # Store user session
+            # Check if user is confirmed
+            if result.get("user_confirmed") is False:
+                return jsonify({"success": False, "error": "Please confirm your email before logging in."}), 401
             session['user_id'] = result["user_id"]
             session['authenticated'] = True
-            return jsonify(result), 200
+            return jsonify({"success": True, "message": "Login successful"}), 200
         else:
-            return jsonify(result), 401
-            
+            error_msg = result.get("error", "Invalid email or password.")
+            return jsonify({"success": False, "error": error_msg}), 401
+
     except Exception as e:
         logging.error(f"Login error: {e}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
@@ -1270,6 +1309,33 @@ def logout():
         return jsonify({"success": True, "message": "Logged out successfully"}), 200
     except Exception as e:
         logging.error(f"Logout error: {e}")
+        return jsonify({"success": False, "error": "Internal server error"}), 500
+
+@app.route('/api/oauth/session', methods=['POST'])
+def oauth_session():
+    """Establish session from Google OAuth access_token sent from frontend JS after Supabase redirect"""
+    if not SUPABASE_AVAILABLE:
+        return jsonify({"success": False, "error": "Database not available"}), 503
+    try:
+        data = request.get_json()
+        access_token = data.get('access_token')
+        if not access_token:
+            return jsonify({"success": False, "error": "Missing access token"}), 400
+        # Validate token with Supabase and get user info
+        from supabase import create_client
+        supabase_url = os.environ.get('SUPABASE_URL')
+        supabase_anon = os.environ.get('SUPABASE_ANON_KEY')
+        supabase = create_client(supabase_url, supabase_anon)
+        user_response = supabase.auth.get_user(access_token)
+        if hasattr(user_response, 'user') and user_response.user:
+            session.clear()
+            session['user_id'] = user_response.user.id
+            session['authenticated'] = True
+            return jsonify({"success": True, "message": "OAuth login successful"}), 200
+        else:
+            return jsonify({"success": False, "error": "Invalid or expired token"}), 401
+    except Exception as e:
+        logging.error(f"OAuth session error: {e}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
 
 @app.route('/api/user/profile', methods=['GET'])
@@ -1312,67 +1378,21 @@ def auth_status():
         logging.error(f"Auth status error: {e}")
         return jsonify({"authenticated": False, "error": "Internal server error"}), 500
 
-@app.route('/page0')
-def page0():
-    """Page 0 - Navigation hub"""
-    return render_template('page0.html')
-
-@app.route('/page1')
-def page1():
-    """Page 1"""
-    return render_template('page1.html')
-
-@app.route('/page2') 
-def page2():
-    """Page 2"""
-    return render_template('page2.html')
-
-@app.route('/settings')
-def settings():
-    """Settings page with profile options"""
-    return render_template('settings.html')
-
-@app.route('/download')
-def download_page():
-    """APK download page"""
-    return render_template('download.html')
-
-@app.route('/download-apk')
-def download_apk():
-    """Download Flora APK"""
-    try:
-        return send_file('static/Flora.apk', 
-                        as_attachment=True, 
-                        download_name='Flora.apk',
-                        mimetype='application/vnd.android.package-archive')
-    except Exception as e:
-        return jsonify({"error": "APK not found"}), 404
-
-@app.route('/health')
-def health():
-    """Health check endpoint"""
-    return jsonify({'status': 'healthy', 'model_loaded': classifier is not None})
-
-@app.route('/api/guest', methods=['POST'])
-def guest_login():
-    session.clear()
-    session['guest'] = True
-    return jsonify({'success': True})
-
 @app.route('/auth/google')
 def auth_google():
     # Construct the Supabase Google OAuth URL
     redirect_url = url_for('auth_google_callback', _external=True)
     supabase_url = os.environ.get('SUPABASE_URL')
+    # This URL must match the one registered in Supabase and Google Cloud Console
     return redirect(
         f'{supabase_url}/auth/v1/authorize?provider=google&redirect_to={redirect_url}'
     )
 
 @app.route('/auth/google/callback')
 def auth_google_callback():
-    # After Google login, Supabase will redirect here
-    # You can add logic to handle the session if needed
-    return redirect('/app')
+    # After Google login, Supabase will redirect here with access_token in fragment (not query)
+    # Frontend JS will extract the token and call /api/oauth/session
+    return render_template('google_oauth_callback.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

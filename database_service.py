@@ -11,57 +11,55 @@ class DatabaseService:
         self.supabase = get_supabase_client()
         self.is_available = is_supabase_available()
     
-    def create_user(self, email: str, password: str, username: str) -> Dict[str, Any]:
-        """Create a new user account"""
+    def create_user(self, email: str, password: str, username: str, redirect_to: str = None) -> Dict[str, Any]:
+        """Create a new user account with Supabase Auth and email confirmation link."""
         if not self.is_available:
             return {"success": False, "error": "Database not available"}
-        
         try:
-            # Create user with Supabase Auth
+            options = {
+                "data": {"username": username}
+            }
+            if redirect_to:
+                options["email_confirm_redirect"] = redirect_to
             response = self.supabase.auth.sign_up({
                 "email": email,
                 "password": password,
-                "options": {
-                    "data": {
-                        "username": username
-                    }
-                }
+                "options": options
             })
-            
-            if response.user:
-                return {
-                    "success": True,
-                    "user_id": response.user.id,
-                    "message": "User created successfully"
-                }
+            # Supabase Python SDK returns user and error
+            if hasattr(response, 'user') and response.user:
+                return {"success": True, "user_id": response.user.id, "message": "User created successfully. Please check your email to confirm your account."}
+            elif hasattr(response, 'error') and response.error:
+                return {"success": False, "error": str(response.error)}
             else:
-                return {"success": False, "error": "Failed to create user"}
-                
+                return {"success": False, "error": "Unknown error during registration."}
         except Exception as e:
             logging.error(f"Error creating user: {e}")
             return {"success": False, "error": str(e)}
     
     def authenticate_user(self, email: str, password: str) -> Dict[str, Any]:
-        """Authenticate user login"""
+        """Authenticate user login and check email confirmation status."""
         if not self.is_available:
             return {"success": False, "error": "Database not available"}
-        
         try:
             response = self.supabase.auth.sign_in_with_password({
                 "email": email,
                 "password": password
             })
-            
-            if response.user:
+            # Supabase returns user and session; user.confirmed_at is set if confirmed
+            if hasattr(response, 'user') and response.user:
+                user_confirmed = getattr(response.user, 'confirmed_at', None) is not None
                 return {
                     "success": True,
                     "user_id": response.user.id,
                     "session": response.session,
-                    "message": "Login successful"
+                    "user_confirmed": user_confirmed,
+                    "message": "Login successful" if user_confirmed else "Email not confirmed"
                 }
+            elif hasattr(response, 'error') and response.error:
+                return {"success": False, "error": str(response.error)}
             else:
                 return {"success": False, "error": "Invalid credentials"}
-                
         except Exception as e:
             logging.error(f"Error authenticating user: {e}")
             return {"success": False, "error": str(e)}

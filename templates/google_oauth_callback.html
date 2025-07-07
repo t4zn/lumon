@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth | Lumon</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { background: #f6fff8; color: #1b4332; font-family: 'Segoe UI', sans-serif; }
+        .oauth-container {
+            max-width: 400px; margin: 10vh auto; background: #fff; border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.08); padding: 2.5rem 2rem; text-align: center;
+        }
+        .oauth-container h1 { color: #10b981; margin-bottom: 0.5em; }
+        .oauth-container .icon { font-size: 3rem; margin-bottom: 0.5em; }
+        .oauth-container .success { color: #10b981; }
+        .oauth-container .error { color: #e63946; }
+        .oauth-container a { color: #10b981; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="oauth-container">
+        <div class="icon success">&#128274;</div>
+        <h1>Signing you in&hellip;</h1>
+        <p id="oauth-status">Processing your Google login. Please wait...</p>
+    </div>
+    <script>
+    // Extract access_token from URL fragment and send to backend for session
+    (function() {
+        function getFragmentParam(name) {
+            const match = window.location.hash.match(new RegExp(name + '=([^&]*)'));
+            return match ? decodeURIComponent(match[1]) : null;
+        }
+        const accessToken = getFragmentParam('access_token');
+        if (accessToken) {
+            fetch('/api/oauth/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ access_token: accessToken })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('oauth-status').textContent = 'Login successful! Redirecting...';
+                    setTimeout(() => { window.location.href = '/app'; }, 1200);
+                } else {
+                    document.getElementById('oauth-status').textContent = data.error || 'OAuth login failed.';
+                }
+            })
+            .catch(() => {
+                document.getElementById('oauth-status').textContent = 'Network error. Please try again.';
+            });
+        } else {
+            document.getElementById('oauth-status').textContent = 'No access token found in URL.';
+        }
+    })();
+    </script>
+</body>
+</html>
