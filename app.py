@@ -773,12 +773,9 @@ def confirm_email():
 def callback():
     # Handle Supabase login callback
     try:
-        user = auth.user()
-        if user:
-            # User is authenticated, redirect to app page
+        if session.get('user_id'):
             return redirect(url_for('index'))
         else:
-            # User is not authenticated, show error message
             return render_template('error.html', error='Authentication failed')
     except Exception as e:
         # Handle authentication error
