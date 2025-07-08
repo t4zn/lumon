@@ -520,6 +520,12 @@ class LumonApp {
             minute: '2-digit' 
         });
 
+        // If sender is bot, parse Markdown to HTML
+        let messageTextHtml = text;
+        if (sender === 'bot' && window.marked) {
+            messageTextHtml = marked.parse(text);
+        }
+
         const messageHtml = `
             <div class="chat-message ${sender}-message" id="${messageId}">
                 ${sender === 'bot' ? `
@@ -531,7 +537,7 @@ class LumonApp {
                 ` : ''}
                 <div class="message-content">
                     <div class="message-bubble">
-                        <div class="message-text">${text}</div>
+                        <div class="message-text">${messageTextHtml}</div>
                     </div>
                     <div class="message-time">${time}</div>
                 </div>

@@ -874,7 +874,15 @@ def predict():
         # Only include wiki_url if page exists
         if wiki_url:
             result['wiki_url'] = wiki_url
-            
+        # Store the structured plant identification in session for chat context
+        session['last_plant'] = result
+        # Add a summary to chat history for context (if chat_sessions exists)
+        session_id = request.form.get('session_id', 'default')
+        summary = f"Identified plant: {result['plant_name']} (Family: {result.get('family', 'Unknown')}, Region: {result.get('region', 'Unknown')})"
+        if 'chat_sessions' in globals():
+            if session_id not in chat_sessions:
+                chat_sessions[session_id] = {'history': [], 'context': {}}
+            chat_sessions[session_id]['history'].append({'role': 'bot', 'message': summary})
         return jsonify(result)
         
     except Exception as e:
@@ -906,8 +914,16 @@ def chat():
         # Add user message to history
         chat_sessions[session_id]['history'].append({'role': 'user', 'message': user_message})
         
+        # If ambiguous message and last_plant exists, add plant info to context
+        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
+        message_lower = user_message.lower()
+        plant_context = ''
+        if any(word in message_lower for word in ambiguous_words) and session.get('last_plant'):
+            plant = session['last_plant']
+            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
+        
         # Generate botanical response with context
-        response = generate_botanical_response_with_memory(user_message, chat_sessions[session_id])
+        response = generate_botanical_response_with_memory(user_message + plant_context, chat_sessions[session_id])
         
         # Add bot response to history
         chat_sessions[session_id]['history'].append({'role': 'bot', 'message': response})
@@ -952,53 +968,102 @@ def is_botanical_question(message):
 
 def generate_botanical_response_with_memory(message, session):
     """Generate smart botanical responses with conversation memory"""
+    # Restrict to botany/plant/gardening questions only (ultra strict, minimal)
+    if not is_botanical_question(message):
+        return "Please ask me about plants, gardening, or botany."
     try:
-        # Build context from recent conversation
+        # Build context from recent conversation (last 100 exchanges for deep memory)
         context = ""
         if session['history']:
-            recent_messages = session['history'][-6:]  # Last 3 exchanges
+            recent_messages = session['history'][-100:]  # Last 100 exchanges (user+bot)
             context = "Recent conversation:\n"
             for msg in recent_messages:
                 context += f"{msg['role'].title()}: {msg['message']}\n"
             context += "\n"
-        
+
+        # Friendly greeting for greetings
+        greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening']
+        message_lower = message.lower().strip()
+        if any(greet in message_lower for greet in greetings) and len(message_lower.split()) <= 4:
+            time.sleep(1)  # Add a 1-second delay for greetings
+            return "Hello! I'm Lumon, your botanical expert. How can I help you today?"
+
+        # Determine if user wants a long answer
+        long_keywords = ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']
+        wants_long = any(word in message_lower for word in long_keywords)
+        # Detect if plant context is present
+        plant_context = ''
+        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
+        if any(word in message_lower for word in ambiguous_words) and session.get('last_plant'):
+            plant = session['last_plant']
+            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
+            wants_long = True  # If plant context is present, allow long answer
+        max_len = 1000 if wants_long else 200
+        search_range = 200 if wants_long else 100
+        trunc_len = max_len - 3  # for safety
+
+        # Adaptive prompt
+        if wants_long:
+            prompt = f"""You are Lumon, a botanical expert. Provide a complete, helpful answer to the user's question. Use the context if relevant.
+
+{context}Current question: {message}{plant_context}
+
+Guidelines:
+- Give a full answer if needed.
+- Use simple, clear language.
+- End your answer with a period.
+
+Response:"""
+        else:
+            prompt = f"""You are Lumon, a botanical expert. Answer the user's question in 10 to 40 words, unless more is needed. Use the context if relevant.
+
+{context}Current question: {message}{plant_context}
+
+Guidelines:
+- Be clear and helpful.
+- End your answer with a period.
+
+Response:"""
+
         # Try Gemini Pro first
         if GOOGLE_API_KEY:
             try:
                 model = genai.GenerativeModel('gemini-1.5-flash')
-                
-                prompt = f"""You are Lumon, a concise botanical expert. Provide brief, practical answers (2-3 sentences max).
-
-{context}Current question: {message}
-
-Guidelines:
-- Keep responses under 100 words
-- Focus on actionable advice
-- Reference previous conversation when relevant
-- Use simple, clear language
-- Avoid repetitive information
-
-Response:"""
-
                 response = model.generate_content(prompt)
-                
                 if response and response.text:
                     result = response.text.strip()
-                    # Truncate if too long
-                    if len(result) > 300:
-                        result = result[:297] + "..."
+                    # Truncate if too long, but always end at the last period (full sentence)
+                    if len(result) > max_len:
+                        truncated = result[:trunc_len]
+                        last_period = truncated.rfind('.')
+                        if last_period != -1:
+                            result = truncated[:last_period+1]
+                        else:
+                            # Try to find the next period after trunc_len (within next search_range chars)
+                            next_period = result.find('.', trunc_len, trunc_len + search_range)
+                            if next_period != -1:
+                                result = result[:next_period+1]
+                            else:
+                                last_space = truncated.rfind(' ')
+                                if last_space != -1:
+                                    result = truncated[:last_space]
+                                else:
+                                    result = truncated  # fallback if no space
+                    # Always end with a period
+                    if not result.endswith('.'):
+                        last_period = result.rfind('.')
+                        if last_period != -1:
+                            result = result[:last_period+1]
                     return result
                 else:
                     logging.warning("Empty response from Gemini, falling back to DeepSeek")
                     return generate_deepseek_response_with_memory(message, session)
-                    
             except Exception as e:
                 logging.error(f"Error with Gemini API: {e}")
                 return generate_deepseek_response_with_memory(message, session)
         else:
             logging.warning("Gemini API key not available, using DeepSeek")
             return generate_deepseek_response_with_memory(message, session)
-            
     except Exception as e:
         logging.error(f"Error in botanical response generation: {e}")
         return generate_smart_fallback_response(message, session)
@@ -1014,40 +1079,43 @@ def generate_deepseek_response_with_memory(message, session):
         if not together_client:
             logging.warning("Together AI client not available, using fallback")
             return generate_smart_fallback_response(message, session)
-        
         # Build context
         context = ""
         if session['history']:
             recent_messages = session['history'][-4:]  # Last 2 exchanges
             for msg in recent_messages:
                 context += f"{msg['role'].title()}: {msg['message']}\n"
-        
-        prompt = f"""You are Lumon, a concise botanical expert. Keep responses under 80 words.
-
-{context}
-Current question: {message}
-
-Provide brief, practical advice. Reference previous context when relevant.
-
-Response:"""
-        
+        # Detect if user wants long answer or plant context is present
+        long_keywords = ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']
+        wants_long = any(word in message.lower() for word in long_keywords)
+        plant_context = ''
+        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
+        if any(word in message.lower() for word in ambiguous_words) and session.get('last_plant'):
+            plant = session['last_plant']
+            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
+            wants_long = True
+        # Adaptive prompt
+        if wants_long:
+            prompt = f"""You are Lumon, a botanical expert. Provide a complete, helpful answer to the user's question. Use the context if relevant.\n\n{context}Current question: {message}{plant_context}\n\nGuidelines:\n- Give a full answer if needed.\n- Use simple, clear language.\n- End your answer with a period.\n\nResponse:"""
+        else:
+            prompt = f"""You are Lumon, a botanical expert. Answer the user's question in a clear, helpful way. Use the context if relevant.\n\n{context}Current question: {message}{plant_context}\n\nGuidelines:\n- Be clear and helpful.\n- End your answer with a period.\n\nResponse:"""
         response = together_client.chat.completions.create(
             model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=150,
+            max_tokens=512,
             temperature=0.6
         )
-        
         if response.choices and response.choices[0].message:
             result = response.choices[0].message.content.strip()
-            # Ensure conciseness
-            if len(result) > 250:
-                result = result[:247] + "..."
+            # Always end at the last period
+            if not result.endswith('.'):
+                last_period = result.rfind('.')
+                if last_period != -1:
+                    result = result[:last_period+1]
             return result
         else:
             logging.warning("Empty response from DeepSeek, using fallback")
             return generate_smart_fallback_response(message, session)
-            
     except Exception as e:
         logging.error(f"Error with DeepSeek API: {e}")
         return generate_smart_fallback_response(message, session)
