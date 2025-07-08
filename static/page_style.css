@@ -32,11 +32,14 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-secondary) 100%);
+    background: #000;
     color: var(--text-primary);
     overflow: hidden;
     height: 100vh;
     position: relative;
+    max-width: 100vw;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
 }
 
 .page-container {
@@ -48,6 +51,13 @@ body {
     position: relative;
     padding: var(--spacing-md);
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    -ms-overflow-style: none; /* Hide scrollbar in IE and Edge */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+}
+
+/* Hide scrollbar in WebKit browsers */
+.page-container::-webkit-scrollbar {
+    display: none;
 }
 
 /* 3D Floating Elements Container */
@@ -59,6 +69,7 @@ body {
     height: 100%;
     pointer-events: none;
     z-index: 1;
+    overflow: hidden; /* Prevent scrollbar */
 }
 
 .content-wrapper {

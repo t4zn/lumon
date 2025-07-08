@@ -19,34 +19,56 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow: hidden; /* Changed to hide all scrolling */
             position: relative;
             background: #000;
+            max-width: 100vw;
         }
         
         body {
             overscroll-behavior-y: contain;
             -webkit-overflow-scrolling: touch;
+            padding-top: env(safe-area-inset-top, 0px); /* Add safe area insets for notched devices */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         .page-container {
             width: 100%;
-            min-height: 100vh;
+            height: 100%; /* Changed from min-height to fixed height */
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             padding: 0;
-            margin: 0;
-            overflow-y: auto;
+            margin: 0 auto;
+            overflow-y: auto; /* This is the only scrollable container */
+            overflow-x: hidden;
+            padding-top: 10px; /* Add padding to prevent content from being cut off */
+            padding-bottom: 30px;
+            max-width: 100%;
+            box-sizing: border-box;
+            -ms-overflow-style: none; /* Hide scrollbar in IE and Edge */
+            scrollbar-width: none; /* Hide scrollbar in Firefox */
+        }
+        
+        /* Hide scrollbar in WebKit browsers */
+        .page-container::-webkit-scrollbar {
+            display: none;
         }
         
         .settings-container {
             width: 100%;
-            max-width: 100%;
+            max-width: 95%;
             padding: 16px;
             position: relative;
             z-index: 2;
+            margin-top: 50px; /* Increased margin to prevent content from being cut off at the top */
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
         }
         
         @media (min-width: 480px) {
