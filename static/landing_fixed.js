@@ -116,5 +116,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Simple enter app function
 function enterApp() {
-    window.location.href = '/page0';
+    // Show loading (optional)
+    // document.getElementById('start-btn').disabled = true;
+    fetch('/api/auth/status')
+        .then(res => res.json())
+        .then(data => {
+            if (data.authenticated) {
+                window.location.href = '/app';
+            } else {
+                window.location.href = '/page0';
+            }
+        })
+        .catch(() => {
+            window.location.href = '/page0';
+        });
 }

@@ -1249,7 +1249,9 @@ def register():
                 "message": "Registration successful! Please check your email and confirm your account before logging in."
             }), 201
         else:
-            return jsonify({"success": False, "error": result.get("error", "Registration failed.")}), 400
+            # Return specific error for username or email already exists
+            error_msg = result.get("error", "Registration failed.")
+            return jsonify({"success": False, "error": error_msg}), 400
 
     except Exception as e:
         logging.error(f"Registration error: {e}")
@@ -1381,9 +1383,7 @@ def auth_google_callback():
 
 @app.route('/')
 def landing():
-    # If user is authenticated or guest, go to main app; else show landing page
-    if session.get('authenticated') or session.get('guest'):
-        return redirect(url_for('index'))
+    # Always show landing page, regardless of authentication status
     return render_template('landing.html')
 
 @app.route('/settings')

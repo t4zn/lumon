@@ -12,10 +12,15 @@ class DatabaseService:
         self.is_available = is_supabase_available()
     
     def create_user(self, email: str, password: str, username: str, redirect_to: str = None) -> Dict[str, Any]:
-        """Create a new user account with Supabase Auth and email confirmation link."""
+        """Create a new user account with Supabase Auth and email confirmation link. Checks for existing username and inserts into profiles."""
         if not self.is_available:
             return {"success": False, "error": "Database not available"}
         try:
+            # Check if username already exists
+            username_check = self.supabase.table("profiles").select("id").eq("username", username).execute()
+            if username_check.data and len(username_check.data) > 0:
+                return {"success": False, "error": "Username already exists"}
+
             options = {
                 "data": {"username": username}
             }
@@ -28,9 +33,32 @@ class DatabaseService:
             })
             # Supabase Python SDK returns user and error
             if hasattr(response, 'user') and response.user:
-                return {"success": True, "user_id": response.user.id, "message": "User created successfully. Please check your email to confirm your account."}
+                user_id = response.user.id
+                # Try to insert into profiles
+                try:
+                    profile_insert = self.supabase.table("profiles").insert({
+                        "id": user_id,
+                        "username": username
+                    }).execute()
+                    if profile_insert.data:
+                        return {"success": True, "user_id": user_id, "message": "User created successfully. Please check your email to confirm your account."}
+                    else:
+                        # Rollback: delete user from auth.users if profile insert fails
+                        self.supabase.table("auth.users").delete().eq("id", user_id).execute()
+                        return {"success": False, "error": "Username already exists or profile creation failed. Please try a different username."}
+                except Exception as e:
+                    # Rollback: delete user from auth.users if profile insert fails
+                    self.supabase.table("auth.users").delete().eq("id", user_id).execute()
+                    error_msg = str(e)
+                    if 'duplicate key value violates unique constraint' in error_msg or 'Username already exists' in error_msg:
+                        return {"success": False, "error": "Username already exists"}
+                    return {"success": False, "error": "Profile creation failed: " + error_msg}
             elif hasattr(response, 'error') and response.error:
-                return {"success": False, "error": str(response.error)}
+                # Check for duplicate email error
+                error_msg = str(response.error)
+                if 'already registered' in error_msg or 'User already registered' in error_msg or 'duplicate key value violates unique constraint' in error_msg:
+                    return {"success": False, "error": "Email already exists"}
+                return {"success": False, "error": error_msg}
             else:
                 return {"success": False, "error": "Unknown error during registration."}
         except Exception as e:
