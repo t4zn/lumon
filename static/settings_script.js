@@ -21,13 +21,27 @@ function populateCountries() {
 
 // --- Modal Utility ---
 
+async function isUserAuthenticated() {
+  try {
+    const res = await fetch('/api/auth/status');
+    const data = await res.json();
+    return data.authenticated === true;
+  } catch {
+    return false;
+  }
+}
+
 // Attach all settings button actions based on order in DOM
 window.addEventListener('DOMContentLoaded', function() {
   const settingBtns = document.querySelectorAll('.setting-btn.placeholder-btn');
   // Button order: [0] Profile Picture, [1] Username, [2] Terms, [3] Password
   if (settingBtns[0]) {
     // Profile Picture
-    settingBtns[0].onclick = function() {
+    settingBtns[0].onclick = async function() {
+      if (!(await isUserAuthenticated())) {
+        showToast('Please log in to update your settings.', 'error');
+        return;
+      }
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -53,7 +67,11 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   if (settingBtns[1]) {
     // Username
-    settingBtns[1].onclick = function() {
+    settingBtns[1].onclick = async function() {
+      if (!(await isUserAuthenticated())) {
+        showToast('Please log in to update your settings.', 'error');
+        return;
+      }
       createModal({
         title: 'Edit Username',
         inputType: 'text',
@@ -103,7 +121,11 @@ window.addEventListener('DOMContentLoaded', function() {
   }
   if (settingBtns[3]) {
     // Password
-    settingBtns[3].onclick = function() {
+    settingBtns[3].onclick = async function() {
+      if (!(await isUserAuthenticated())) {
+        showToast('Please log in to update your settings.', 'error');
+        return;
+      }
       createModal({
         title: 'Change Password',
         confirmText: 'Save',
@@ -322,21 +344,27 @@ function toggleCountryDropdown() {
 function selectCountry(country) {
   selectedCountrySpan.textContent = country;
   countryDropdown.style.display = 'none';
-  // Save to backend
-  fetch('/api/user/update_country', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ country })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        showToast('Country updated!', 'success');
-      } else {
-        showToast('Failed to update country', 'error');
-      }
+  (async () => {
+    if (!(await isUserAuthenticated())) {
+      showToast('Please log in to update your settings.', 'error');
+      return;
+    }
+    // Save to backend
+    fetch('/api/user/update_country', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country })
     })
-    .catch(() => showToast('Network error', 'error'));
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showToast('Country updated!', 'success');
+        } else {
+          showToast('Failed to update country', 'error');
+        }
+      })
+      .catch(() => showToast('Network error', 'error'));
+  })();
 }
 
 // Close dropdown when clicking outside

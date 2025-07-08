@@ -22,7 +22,7 @@ class DatabaseService:
                 return {"success": False, "error": "Username already exists"}
 
             options = {
-                "data": {"username": username}
+                "data": {"username": username, "email": email}
             }
             if redirect_to:
                 options["email_confirm_redirect"] = redirect_to
@@ -38,7 +38,8 @@ class DatabaseService:
                 try:
                     profile_insert = self.supabase.table("profiles").insert({
                         "id": user_id,
-                        "username": username
+                        "username": username,
+                        "email": email
                     }).execute()
                     if profile_insert.data:
                         return {"success": True, "user_id": user_id, "message": "User created successfully. Please check your email to confirm your account."}
@@ -232,6 +233,80 @@ class DatabaseService:
                 
         except Exception as e:
             logging.error(f"Error getting user profile: {e}")
+            return {"success": False, "error": str(e)}
+
+    def update_username(self, user_id: str, username: str) -> dict:
+        """Update the username for a user."""
+        if not self.is_available:
+            return {"success": False, "error": "Database not available"}
+        try:
+            # Check if username already exists
+            username_check = self.supabase.table("profiles").select("id").eq("username", username).execute()
+            if username_check.data and len(username_check.data) > 0:
+                return {"success": False, "error": "Username already exists"}
+            response = self.supabase.table("profiles").update({"username": username}).eq("id", user_id).execute()
+            if response.data:
+                return {"success": True}
+            else:
+                return {"success": False, "error": "Failed to update username"}
+        except Exception as e:
+            logging.error(f"Error updating username: {e}")
+            return {"success": False, "error": str(e)}
+
+    def update_password(self, user_id: str, old_password: str, new_password: str) -> dict:
+        """Update the password for a user using Supabase Auth."""
+        if not self.is_available:
+            return {"success": False, "error": "Database not available"}
+        try:
+            # Get user email from profile
+            profile = self.get_user_profile(user_id)
+            if not profile.get("success"):
+                return {"success": False, "error": "Profile not found"}
+            email = profile["profile"].get("email")
+            if not email:
+                return {"success": False, "error": "Email not found in profile"}
+            # Re-authenticate and update password
+            auth_res = self.supabase.auth.sign_in_with_password({"email": email, "password": old_password})
+            if hasattr(auth_res, 'user') and auth_res.user:
+                update_res = self.supabase.auth.update_user({"password": new_password})
+                if hasattr(update_res, 'user') and update_res.user:
+                    return {"success": True}
+                elif hasattr(update_res, 'error') and update_res.error:
+                    return {"success": False, "error": str(update_res.error)}
+                else:
+                    return {"success": False, "error": "Failed to update password"}
+            else:
+                return {"success": False, "error": "Old password incorrect"}
+        except Exception as e:
+            logging.error(f"Error updating password: {e}")
+            return {"success": False, "error": str(e)}
+
+    def update_country(self, user_id: str, country: str) -> dict:
+        """Update the country for a user."""
+        if not self.is_available:
+            return {"success": False, "error": "Database not available"}
+        try:
+            response = self.supabase.table("profiles").update({"country": country}).eq("id", user_id).execute()
+            if response.data:
+                return {"success": True}
+            else:
+                return {"success": False, "error": "Failed to update country"}
+        except Exception as e:
+            logging.error(f"Error updating country: {e}")
+            return {"success": False, "error": str(e)}
+
+    def update_profile_pic(self, user_id: str, file_url: str) -> dict:
+        """Update the profile picture URL for a user."""
+        if not self.is_available:
+            return {"success": False, "error": "Database not available"}
+        try:
+            response = self.supabase.table("profiles").update({"profile_pic": file_url}).eq("id", user_id).execute()
+            if response.data:
+                return {"success": True}
+            else:
+                return {"success": False, "error": "Failed to update profile picture"}
+        except Exception as e:
+            logging.error(f"Error updating profile picture: {e}")
             return {"success": False, "error": str(e)}
 
 # Global database service instance

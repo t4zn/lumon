@@ -47,7 +47,7 @@ except ImportError as e:
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "Lumon-secret-key-2024")
+app.secret_key = 'lumon-very-secret-key-2024'  # Fixed secret key for session persistence
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configuration
@@ -1408,6 +1408,72 @@ def page2():
 @app.route('/health')
 def health():
     return "OK", 200
+
+@app.route('/api/user/update_username', methods=['POST'])
+def update_username():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    data = request.get_json()
+    username = data.get('username')
+    if not username:
+        return jsonify({'success': False, 'error': 'Missing username'}), 400
+    result = db_service.update_username(session['user_id'], username)
+    if result.get('success'):
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to update username')}), 400
+
+@app.route('/api/user/update_password', methods=['POST'])
+def update_password():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    if not old_password or not new_password:
+        return jsonify({'success': False, 'error': 'Missing password fields'}), 400
+    result = db_service.update_password(session['user_id'], old_password, new_password)
+    if result.get('success'):
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to update password')}), 400
+
+@app.route('/api/user/update_country', methods=['POST'])
+def update_country():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    data = request.get_json()
+    country = data.get('country')
+    if not country:
+        return jsonify({'success': False, 'error': 'Missing country'}), 400
+    result = db_service.update_country(session['user_id'], country)
+    if result.get('success'):
+        return jsonify({'success': True}), 200
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to update country')}), 400
+
+@app.route('/api/user/upload_profile_pic', methods=['POST'])
+def upload_profile_pic():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    if 'profile_pic' not in request.files:
+        return jsonify({'success': False, 'error': 'No file uploaded'}), 400
+    file = request.files['profile_pic']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No selected file'}), 400
+    # Save file to uploads directory
+    uploads_dir = os.path.join(os.getcwd(), 'uploads')
+    os.makedirs(uploads_dir, exist_ok=True)
+    filename = f"{session['user_id']}_profile_{file.filename}"
+    file_path = os.path.join(uploads_dir, filename)
+    file.save(file_path)
+    # You may want to serve this file statically or upload to a CDN in production
+    file_url = f"/uploads/{filename}"
+    result = db_service.update_profile_pic(session['user_id'], file_url)
+    if result.get('success'):
+        return jsonify({'success': True, 'file_url': file_url}), 200
+    else:
+        return jsonify({'success': False, 'error': result.get('error', 'Failed to update profile picture')}), 400
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
