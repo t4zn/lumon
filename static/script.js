@@ -102,51 +102,8 @@ class LumonApp {
 
         // Removed: continueChat, newChat, clearHistory event listeners
 
-        // Camera trigger buttons - Fix mobile gallery issue
-        safeAddListener(this.cameraTriggerBtn, 'click', () => {
-            this.hideAttachOptions();
-            this.openCamera();
-        });
-        
-        safeAddListener(this.galleryTriggerBtn, 'click', () => {
-            this.hideAttachOptions();
-            // Use separate input for gallery to avoid camera opening
-            const galleryInput = document.createElement('input');
-            galleryInput.type = 'file';
-            galleryInput.accept = 'image/*';
-            galleryInput.style.display = 'none';
-            galleryInput.onchange = (e) => {
-                if (e.target.files && e.target.files[0]) {
-                    this.handleImageUpload(e.target.files[0]);
-                }
-                document.body.removeChild(galleryInput);
-            };
-            document.body.appendChild(galleryInput);
-            galleryInput.click();
-        });
-        
-        // Camera interface controls
-        safeAddListener(this.cameraCloseBtn, 'click', () => {
-            this.closeCamera();
-        });
-        
-        safeAddListener(this.cameraDoneBtn, 'click', () => {
-            this.closeCamera();
-        });
-        
-        safeAddListener(this.captureBtn, 'click', () => {
-            this.capturePhoto();
-        });
-        
-        safeAddListener(this.galleryBtn, 'click', () => {
-            this.closeCamera();
-            if (this.imageInput) this.imageInput.click();
-        });
-        
-        safeAddListener(this.flashBtn, 'click', () => {
-            this.toggleFlash();
-        });
-        
+        // All camera/image upload related code removed or commented out
+
         // Theme toggle
         safeAddListener(this.themeToggle, 'click', () => {
             this.toggleTheme();

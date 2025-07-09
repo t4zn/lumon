@@ -118,89 +118,10 @@
         </div>
 
         <!-- Camera Interface -->
-        <div class="camera-interface" id="camera-interface" style="display: none;">
-            <div class="camera-header">
-                <button class="camera-close" id="camera-close">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h2 class="camera-title">Identify Plants Around You</h2>
-                <button class="camera-done" id="camera-done">Done</button>
-            </div>
-            
-            <div class="camera-viewfinder">
-                <video id="camera-video" autoplay playsinline></video>
-                <canvas id="camera-canvas" style="display: none;"></canvas>
-                
-                <div class="camera-overlay">
-                    <div class="focus-ring" id="focus-ring"></div>
-                    <div class="scan-lines"></div>
-                </div>
-            </div>
-            
-            <div class="camera-controls">
-                <button class="gallery-btn" id="gallery-btn">
-                    <i class="fas fa-images"></i>
-                </button>
-                <button class="capture-btn" id="capture-btn">
-                    <div class="capture-ring">
-                        <div class="capture-inner"></div>
-                    </div>
-                </button>
-                <button class="flash-btn" id="flash-btn">
-                    <i class="fas fa-bolt"></i>
-                </button>
-            </div>
-        </div>
+        <!-- Entire camera and upload section removed to disable image recognition and upload -->
 
         <!-- Input Controls -->
-        <div class="input-area">
-            <form id="upload-form" enctype="multipart/form-data">
-                <input type="file" 
-                       id="image-input" 
-                       name="image" 
-                       accept="image/*"
-                       style="display: none;">
-                <input type="file" 
-                       id="camera-input" 
-                       name="camera" 
-                       accept="image/*" 
-                       capture="environment"
-                       style="display: none;">
-            </form>
-            
-            <div class="chat-input-container">
-                <div class="input-row">
-                    <button class="attach-btn" id="attach-btn">
-                        <i class="fas fa-paperclip"></i>
-                    </button>
-                    <div class="text-input-wrapper">
-                        <input type="text" 
-                               id="text-input" 
-                               placeholder="Ask me about plants..." 
-                               class="text-input"
-                               maxlength="500">
-                        <div class="input-suggestions" id="input-suggestions">
-                            <span class="suggestion" data-text="What's this plant?">What's this plant?</span>
-                            <span class="suggestion" data-text="How do I care for roses?">How do I care for roses?</span>
-                            <span class="suggestion" data-text="Tell me about succulents">Tell me about succulents</span>
-                        </div>
-                    </div>
-                    <button class="send-btn" id="send-btn" disabled>
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-                <div class="attach-options" id="attach-options" style="display: none;">
-                    <button class="camera-trigger-btn" id="camera-trigger-btn">
-                        <i class="fas fa-camera"></i>
-                        <span>Camera</span>
-                    </button>
-                    <button class="gallery-trigger-btn" id="gallery-trigger-btn">
-                        <i class="fas fa-images"></i>
-                        <span>Gallery</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <!-- Entire input area and controls removed to disable image recognition and upload -->
 
         <!-- Loading Overlay -->
         <div class="loading-overlay" id="loading-overlay" style="display: none;">

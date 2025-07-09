@@ -100,14 +100,14 @@ class LumonApp {
         if (this.cameraTriggerBtn) {
             this.cameraTriggerBtn.addEventListener('click', () => {
                 this.hideAttachOptions();
-                this.triggerImageUpload();
+                // this.triggerImageUpload(); // Removed
             });
         }
         
         if (this.galleryTriggerBtn) {
             this.galleryTriggerBtn.addEventListener('click', () => {
                 this.hideAttachOptions();
-                this.triggerImageUpload();
+                // this.triggerImageUpload(); // Removed
             });
         }
         
@@ -115,7 +115,7 @@ class LumonApp {
         if (this.imageInput) {
             this.imageInput.addEventListener('change', (e) => {
                 if (e.target.files && e.target.files[0]) {
-                    this.handleImageUpload(e.target.files[0]);
+                    // this.handleImageUpload(e.target.files[0]); // Removed
                 }
             });
         }
@@ -204,11 +204,11 @@ class LumonApp {
         }
     }
 
-    triggerImageUpload() {
-        if (this.imageInput) {
-            this.imageInput.click();
-        }
-    }
+    // triggerImageUpload() { // Removed
+    //     if (this.imageInput) {
+    //         this.imageInput.click();
+    //     }
+    // }
 
     // Time update
     initializeTime() {
@@ -469,46 +469,46 @@ class LumonApp {
     }
 
     // Image upload
-    async handleImageUpload(file) {
-        if (!file) return;
+    // async handleImageUpload(file) { // Removed
+    //     if (!file) return;
 
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            this.addMessage('Please upload a valid image file (JPEG, PNG, GIF, or WebP).', 'bot');
-            return;
-        }
+    //     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    //     if (!allowedTypes.includes(file.type)) {
+    //         this.addMessage('Please upload a valid image file (JPEG, PNG, GIF, or WebP).', 'bot');
+    //         return;
+    //     }
 
-        if (file.size > 16 * 1024 * 1024) {
-            this.addMessage('Please upload an image smaller than 16MB.', 'bot');
-            return;
-        }
+    //     if (file.size > 16 * 1024 * 1024) {
+    //         this.addMessage('Please upload an image smaller than 16MB.', 'bot');
+    //         return;
+    //     }
 
-        this.addImageMessage(file);
-        this.showLoading();
+    //     this.addImageMessage(file);
+    //     this.showLoading();
 
-        try {
-            const formData = new FormData();
-            formData.append('image', file);
+    //     try {
+    //         const formData = new FormData();
+    //         formData.append('image', file);
 
-            const response = await fetch('https://lumon-e85s.onrender.com/predict', {
-                method: 'POST',
-                body: formData
-            });
+    //         const response = await fetch('https://lumon-e85s.onrender.com/predict', {
+    //             method: 'POST',
+    //             body: formData
+    //         });
 
-            const data = await response.json();
-            this.hideLoading();
+    //         const data = await response.json();
+    //         this.hideLoading();
 
-            if (data.error) {
-                this.addMessage(`I couldn't analyze your image: ${data.error}. Please try a clearer photo.`, 'bot');
-            } else {
-                this.addPlantIdentificationResult(data);
-            }
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            this.hideLoading();
-            this.addMessage('I\'m having trouble analyzing your image. Please try again.', 'bot');
-        }
-    }
+    //         if (data.error) {
+    //             this.addMessage(`I couldn't analyze your image: ${data.error}. Please try a clearer photo.`, 'bot');
+    //         } else {
+    //             this.addPlantIdentificationResult(data);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error uploading image:', error);
+    //         this.hideLoading();
+    //         this.addMessage('I\'m having trouble analyzing your image. Please try again.', 'bot');
+    //     }
+    // }
 
     // UI helper functions
     addMessage(text, sender) {
