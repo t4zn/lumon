@@ -1,10 +1,10 @@
 import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import logging
 
 # Load environment variables
-load_dotenv()
+#load_dotenv()
 
 class SupabaseConfig:
     def __init__(self):
