@@ -1,1697 +1,1418 @@
-import os
-import logging
-import uuid
-import requests
-from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for, make_response
-from werkzeug.utils import secure_filename
-from werkzeug.middleware.proxy_fix import ProxyFix
-from PIL import Image
-import io
-import base64
-import random
-import time
-import json
-import re
-from dotenv import load_dotenv
+// Lumon Plant Identifier - Mobile Chatbot Interface
 
-# Load environment variables first
-load_dotenv()
+class LumonApp {
+    constructor() {
+        this.initializeElements();
+        this.attachEventListeners();
+        this.initializeTime();
+        this.initializeTheme();
+        this.setupCamera();
+        this.init3DBackground();
+        this.initAnimations();
+        this.messageCounter = 0;
+        this.sessionId = this.generateSessionId();
+        this.showInitialMessage();
+    }
 
-# Import Supabase integration
-try:
-    from supabase_config import is_supabase_available
-    from database_service import db_service
-    SUPABASE_AVAILABLE = is_supabase_available()
-except ImportError as e:
-    logging.warning(f"Supabase integration not available: {e}")
-    SUPABASE_AVAILABLE = False
+    generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
 
-# Import AI libraries with fallback handling
-try:
-    import google.generativeai as genai
-    GENAI_AVAILABLE = True
-except ImportError as e:
-    logging.warning(f"Google Generative AI not available: {e}")
-    genai = None
-    GENAI_AVAILABLE = False
+    initializeElements() {
+        // Helper function to safely get elements
+        const safeGetElement = (id) => {
+            const element = document.getElementById(id);
+            if (!element) {
+                console.warn(`Element with id '${id}' not found`);
+            }
+            return element;
+        };
 
-try:
-    from together import Together
-    TOGETHER_AVAILABLE = True
-except ImportError as e:
-    logging.warning(f"Together AI not available: {e}")
-    Together = None
-    TOGETHER_AVAILABLE = False
+        // Chat elements
+        this.chatContainer = safeGetElement('chat-container');
+        this.welcomeMessage = safeGetElement('welcome-message');
+        
+        // Camera elements
+        this.cameraInterface = safeGetElement('camera-interface');
+        this.cameraVideo = safeGetElement('camera-video');
+        this.cameraCanvas = safeGetElement('camera-canvas');
+        this.focusRing = safeGetElement('focus-ring');
+        
+        // Control buttons
+        this.cameraTriggerBtn = safeGetElement('camera-trigger-btn');
+        this.galleryTriggerBtn = safeGetElement('gallery-trigger-btn');
+        this.cameraCloseBtn = safeGetElement('camera-close');
+        this.cameraDoneBtn = safeGetElement('camera-done');
+        this.captureBtn = safeGetElement('capture-btn');
+        this.galleryBtn = safeGetElement('gallery-btn');
+        this.flashBtn = safeGetElement('flash-btn');
+        
+        // Chat input elements
+        this.textInput = safeGetElement('text-input');
+        this.sendBtn = safeGetElement('send-btn');
+        this.attachBtn = safeGetElement('attach-btn');
+        this.attachOptions = safeGetElement('attach-options');
+        this.inputSuggestions = safeGetElement('input-suggestions');
+        
+        // Theme and settings
+        this.themeToggle = safeGetElement('theme-toggle');
+        this.settingsBtn = safeGetElement('settings-btn');
+        this.settingsModal = safeGetElement('settings-modal');
+        this.settingsClose = safeGetElement('settings-close');
+        
+        // Form and loading
+        this.uploadForm = safeGetElement('upload-form');
+        this.imageInput = safeGetElement('image-input');
+        this.loadingOverlay = safeGetElement('loading-overlay');
+        
+        // Status bar
+        this.currentTime = safeGetElement('current-time');
+        
+        // Camera stream
+        this.cameraStream = null;
+        this.flashEnabled = false;
+    }
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+    attachEventListeners() {
+        // Helper function to safely add event listeners
+        const safeAddListener = (element, event, handler) => {
+            if (element) {
+                element.addEventListener(event, handler);
+            }
+        };
 
-app = Flask(__name__)
-app.secret_key = 'lumon-very-secret-key-2024'  # Fixed secret key for session persistence
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+        // Menu functionality
+        this.menuBtn = document.getElementById('menu-btn');
+        this.sideMenu = document.getElementById('side-menu');
+        this.menuOverlay = document.getElementById('menu-overlay');
+        this.menuClose = document.getElementById('menu-close');
+        // Removed: this.continueChat, this.newChat, this.clearHistory
 
-# Configuration
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+        safeAddListener(this.menuBtn, 'click', () => {
+            this.openMenu();
+        });
 
-# Session storage for chat memory
-chat_sessions = {}
+        safeAddListener(this.menuClose, 'click', () => {
+            this.closeMenu();
+        });
 
-# Ensure upload directory exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        safeAddListener(this.menuOverlay, 'click', () => {
+            this.closeMenu();
+        });
 
-# API Configuration
-PLANTNET_API_KEY = os.getenv("PLANTNET_API_KEY")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+        // Removed: continueChat, newChat, clearHistory event listeners
 
-# Configure Gemini if available
-if GOOGLE_API_KEY and GENAI_AVAILABLE:
-    genai.configure(api_key=GOOGLE_API_KEY)
+        // Camera trigger buttons - Fix mobile gallery issue
+        safeAddListener(this.cameraTriggerBtn, 'click', () => {
+            this.hideAttachOptions();
+            this.openCamera();
+        });
+        
+        safeAddListener(this.galleryTriggerBtn, 'click', () => {
+            this.hideAttachOptions();
+            // Use separate input for gallery to avoid camera opening
+            const galleryInput = document.createElement('input');
+            galleryInput.type = 'file';
+            galleryInput.accept = 'image/*';
+            galleryInput.style.display = 'none';
+            galleryInput.onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.handleImageUpload(e.target.files[0]);
+                }
+                document.body.removeChild(galleryInput);
+            };
+            document.body.appendChild(galleryInput);
+            galleryInput.click();
+        });
+        
+        // Camera interface controls
+        safeAddListener(this.cameraCloseBtn, 'click', () => {
+            this.closeCamera();
+        });
+        
+        safeAddListener(this.cameraDoneBtn, 'click', () => {
+            this.closeCamera();
+        });
+        
+        safeAddListener(this.captureBtn, 'click', () => {
+            this.capturePhoto();
+        });
+        
+        safeAddListener(this.galleryBtn, 'click', () => {
+            this.closeCamera();
+            if (this.imageInput) this.imageInput.click();
+        });
+        
+        safeAddListener(this.flashBtn, 'click', () => {
+            this.toggleFlash();
+        });
+        
+        // Theme toggle
+        safeAddListener(this.themeToggle, 'click', () => {
+            this.toggleTheme();
+        });
+        
+        // Settings
+        safeAddListener(this.settingsBtn, 'click', () => {
+            this.openSettings();
+        });
+        
+        safeAddListener(this.settingsClose, 'click', () => {
+            this.closeSettings();
+        });
+        
+        // Theme options in settings
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.changeTheme(e.target.dataset.theme);
+            });
+        });
+        
+        // File input change
+        safeAddListener(this.imageInput, 'change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                this.handleImageSelection(e.target.files[0]);
+            }
+        });
+        
+        // Camera viewfinder tap to focus
+        safeAddListener(this.cameraVideo, 'click', (e) => {
+            this.focusCamera(e);
+        });
+        
+        // Form submission
+        safeAddListener(this.uploadForm, 'submit', (e) => {
+            e.preventDefault();
+        });
+        
+        // Text input events
+        safeAddListener(this.textInput, 'input', () => {
+            this.handleTextInput();
+        });
+        
+        safeAddListener(this.textInput, 'keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendTextMessage();
+            }
+        });
+        
+        safeAddListener(this.textInput, 'focus', () => {
+            this.showSuggestions();
+        });
+        
+        safeAddListener(this.textInput, 'blur', () => {
+            setTimeout(() => this.hideSuggestions(), 150);
+        });
+        
+        safeAddListener(this.sendBtn, 'click', () => {
+            this.sendTextMessage();
+        });
+        
+        safeAddListener(this.attachBtn, 'click', () => {
+            this.toggleAttachOptions();
+        });
+        
+        // Suggestion clicks
+        document.querySelectorAll('.suggestion').forEach(suggestion => {
+            suggestion.addEventListener('click', () => {
+                this.textInput.value = suggestion.dataset.text;
+                this.handleTextInput();
+                this.hideSuggestions();
+                this.textInput.focus();
+            });
+        });
+    }
 
-# Configure Together AI if available
-if TOGETHER_API_KEY and TOGETHER_AVAILABLE:
-    together_client = Together(api_key=TOGETHER_API_KEY)
-else:
-    together_client = None
-
-# Simplified plant identification without heavy ML dependencies
-classifier = None
-
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def get_plant_details(plant_name):
-    """Get detailed plant information including family, region, etc."""
-    # Comprehensive plant database with detailed information
-    plant_details_db = {
-        'Monstera deliciosa': {
-            'family': 'Araceae',
-            'region': 'Central America',
-            'toxicity': 85,
-            'edible': False,
-            'diseases': ['Skin irritation', 'Mouth swelling if ingested', 'Kidney stones from oxalates'],
-            'care_tips': 'Bright indirect light, water when top soil is dry, high humidity preferred'
-        },
-        'Epipremnum aureum': {
-            'family': 'Araceae',
-            'region': 'Southeast Asia',
-            'toxicity': 75,
-            'edible': False,
-            'diseases': ['Oral irritation', 'Difficulty swallowing', 'Vomiting if consumed'],
-            'care_tips': 'Low to bright indirect light, water when soil is dry, very adaptable'
-        },
-        'Malus domestica': {
-            'family': 'Rosaceae',
-            'region': 'Central Asia',
-            'toxicity': 10,
-            'edible': True,
-            'diseases': ['Seeds contain cyanogenic compounds - avoid consuming in large quantities'],
-            'care_tips': 'Full sun, well-draining soil, regular watering, annual pruning in late winter'
-        },
-        'Ficus lyrata': {
-            'family': 'Moraceae',
-            'region': 'West Africa',
-            'toxicity': 60,
-            'edible': False,
-            'diseases': ['Latex allergies', 'Skin rashes', 'Respiratory irritation'],
-            'care_tips': 'Bright indirect light, consistent watering, avoid moving frequently'
-        },
-        'Aloe barbadensis': {
-            'family': 'Asphodelaceae',
-            'region': 'Arabian Peninsula',
-            'toxicity': 20,
-            'edible': True,
-            'diseases': ['Laxative effects if consumed in large amounts', 'Skin sensitivity in rare cases'],
-            'care_tips': 'Bright light, water deeply but infrequently, well-draining soil'
-        },
-        'Ocimum basilicum': {
-            'family': 'Lamiaceae',
-            'region': 'India',
-            'toxicity': 5,
-            'edible': True,
-            'diseases': ['Generally safe', 'Possible blood thinning with excessive consumption'],
-            'care_tips': 'Full sun, regular watering, pinch flowers to encourage leaf growth'
+    initializeTime() {
+        this.updateTime();
+        setInterval(() => this.updateTime(), 1000);
+    }
+    
+    updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: false 
+        });
+        if (this.currentTime) {
+            this.currentTime.textContent = timeString;
         }
     }
     
-    # Try exact match first
-    if plant_name in plant_details_db:
-        return plant_details_db[plant_name]
+    initializeTheme() {
+        // Always use dark theme only
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
     
-    # Try partial match
-    for db_name, details in plant_details_db.items():
-        if any(word in db_name.lower() for word in plant_name.lower().split()):
-            return details
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+    }
     
-    # Default details for unknown plants
-    return {
-        'family': 'Unknown',
-        'region': 'Various',
-        'toxicity': 50,
-        'edible': False,
-        'diseases': ['Unknown toxicity - avoid ingestion', 'Possible skin irritation'],
-        'care_tips': 'Provide appropriate light and water based on plant type'
+    changeTheme(theme) {
+        this.setTheme(theme);
+        this.closeSettings();
+    }
+    
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('Lumon-theme', theme);
+        
+        // Update active theme option
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.theme === theme) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    
+    openSettings() {
+        if (!this.settingsModal) return;
+        this.settingsModal.style.display = 'flex';
+        if (window.gsap) {
+            gsap.fromTo(this.settingsModal, 
+                { opacity: 0 },
+                { opacity: 1, duration: 0.3 }
+            );
+        }
+    }
+    
+    closeSettings() {
+        if (!this.settingsModal) return;
+        if (window.gsap) {
+            gsap.to(this.settingsModal, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    this.settingsModal.style.display = 'none';
+                }
+            });
+        } else {
+            this.settingsModal.style.display = 'none';
+        }
     }
 
-def get_wikipedia_summary(plant_name):
-    """Fetch plant description from Wikipedia API with improved search"""
-    try:
-        # Clean the plant name for better search results
-        clean_name = plant_name.strip()
+    setupCamera() {
+        this.cameraSupported = 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices;
         
-        # First try direct page access
-        search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{clean_name.replace(' ', '_')}"
-        response = requests.get(search_url, timeout=10)
-        
-        if response.status_code == 200:
-            data = response.json()
-            extract = data.get('extract', '')
-            if extract and len(extract) > 50:
-                return extract[:600] + "..." if len(extract) > 600 else extract
-        
-        # Try search API to find the best match
-        search_api_url = "https://en.wikipedia.org/w/api.php"
-        search_params = {
-            'action': 'opensearch',
-            'search': clean_name,
-            'limit': 3,
-            'format': 'json',
-            'namespace': 0
+        if (!this.cameraSupported) {
+            console.log('Camera not supported');
+            this.cameraTriggerBtn.style.opacity = '0.5';
+        }
+    }
+    
+    async openCamera() {
+        if (!this.cameraSupported) {
+            this.addBotMessage('Camera is not supported on this device. Please use the gallery option instead.');
+            return;
         }
         
-        search_response = requests.get(search_api_url, params=search_params, timeout=10)
-        if search_response.status_code == 200:
-            search_data = search_response.json()
-            if len(search_data) > 1 and len(search_data[1]) > 0:
-                # Get the first search result
-                best_match = search_data[1][0]
-                
-                # Get summary for the best match
-                summary_params = {
-                    'action': 'query',
-                    'format': 'json',
-                    'titles': best_match,
-                    'prop': 'extracts',
-                    'exintro': True,
-                    'explaintext': True,
-                    'exsectionformat': 'plain'
+        try {
+            this.cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 }
-                
-                summary_response = requests.get(search_api_url, params=summary_params, timeout=10)
-                if summary_response.status_code == 200:
-                    summary_data = summary_response.json()
-                    pages = summary_data.get('query', {}).get('pages', {})
-                    for page_id, page_data in pages.items():
-                        extract = page_data.get('extract', '')
-                        if extract and len(extract) > 50:
-                            return extract[:600] + "..." if len(extract) > 600 else extract
+            });
+            
+            this.cameraVideo.srcObject = this.cameraStream;
+            this.cameraInterface.style.display = 'flex';
+            
+            // Animate camera interface
+            gsap.fromTo(this.cameraInterface,
+                { opacity: 0, scale: 0.9 },
+                { opacity: 1, scale: 1, duration: 0.4, ease: "power2.out" }
+            );
+            
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            this.addBotMessage('Unable to access camera. Please check permissions and try again.');
+        }
+    }
+    
+    closeCamera() {
+        if (this.cameraStream) {
+            this.cameraStream.getTracks().forEach(track => track.stop());
+            this.cameraStream = null;
+        }
         
-        return f"No detailed Wikipedia information available for {plant_name}. This might be a rare species or the name might need scientific verification."
+        gsap.to(this.cameraInterface, {
+            opacity: 0,
+            scale: 0.9,
+            duration: 0.3,
+            onComplete: () => {
+                this.cameraInterface.style.display = 'none';
+            }
+        });
+    }
+    
+    capturePhoto() {
+        if (!this.cameraStream) return;
         
-    except Exception as e:
-        logging.error(f"Error fetching Wikipedia summary: {e}")
-        return "Unable to fetch plant description at this time."
+        const canvas = this.cameraCanvas;
+        const video = this.cameraVideo;
+        const context = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        context.drawImage(video, 0, 0);
+        
+        // Convert to blob and process
+        canvas.toBlob((blob) => {
+            this.closeCamera();
+            this.handleImageSelection(blob);
+        }, 'image/jpeg', 0.8);
+        
+        // Visual feedback
+        this.focusRing.classList.add('active');
+        setTimeout(() => {
+            this.focusRing.classList.remove('active');
+        }, 1000);
+    }
+    
+    focusCamera(event) {
+        const rect = this.cameraVideo.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        this.focusRing.style.left = `${x - 50}px`;
+        this.focusRing.style.top = `${y - 50}px`;
+        this.focusRing.classList.add('active');
+        
+        setTimeout(() => {
+            this.focusRing.classList.remove('active');
+        }, 1000);
+    }
+    
+    toggleFlash() {
+        this.flashEnabled = !this.flashEnabled;
+        this.flashBtn.style.color = this.flashEnabled ? '#fbbf24' : '';
+        
+        // Flash functionality would require advanced camera API
+        // This is a visual toggle for now
+    }
+    
+    handleImageSelection(file) {
+        if (!file) return;
+        
+        // Validate file type for uploaded files
+        if (file.type && !this.isValidImageType(file)) {
+            this.addBotMessage('Please select a valid image file (PNG, JPG, JPEG, GIF, WEBP).');
+            return;
+        }
+        
+        // Validate file size (16MB limit)
+        if (file.size > 16 * 1024 * 1024) {
+            this.addBotMessage('File size must be less than 16MB. Please choose a smaller image.');
+            return;
+        }
+        
+        // Add user message with image
+        this.addUserMessage(file);
+        
+        // Process the image
+        this.processImage(file);
+    }
+    
+    isValidImageType(file) {
+        const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        return validTypes.includes(file.type);
+    }
 
-def identify_plant_with_plantnet(image_path):
-    """Enhanced PlantNet API with optimized performance and accuracy"""
-    if not PLANTNET_API_KEY:
-        logging.warning("PlantNet API key not available")
-        return None
+    addUserMessage(file) {
+        if (!this.chatContainer) return;
+        
+        const messageId = `user-msg-${++this.messageCounter}`;
+        const time = new Date().toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        
+        const messageHtml = `
+            <div class="chat-message user-message" id="${messageId}">
+                <div class="message-content">
+                    <div class="message-bubble">
+                        <img src="${URL.createObjectURL(file)}" alt="Plant image" class="plant-image">
+                        <p>Can you identify this plant?</p>
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+                <div class="message-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        `;
+        
+        this.chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        this.scrollToBottom();
+    }
     
-    # Multiple projects for better accuracy and coverage
-    projects = [
-        "weurope",           # Western Europe - fast and accurate for European plants
-        "k-world-Lumon",     # Global Lumon - comprehensive worldwide database
-        "plantnet-300k",     # Large dataset - 300k species
-        "the-plant-list"     # Scientific reference - authoritative names
-    ]
-    
-    best_result = None
-    highest_confidence = 0
-    
-    for project in projects:
-        try:
-            # Optimized API endpoint
-            url = f"https://my-api.plantnet.org/v1/identify/{project}"
+    addBotMessage(text, plantResult = null) {
+        if (!this.chatContainer) return;
+        
+        const messageId = `bot-msg-${++this.messageCounter}`;
+        const time = new Date().toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        
+        let resultHtml = '';
+        if (plantResult) {
+            const careList = plantResult.care_tips ? 
+                plantResult.care_tips.map(tip => `<li>${tip}</li>`).join('') : '';
             
-            # Prepare optimized payload
-            with open(image_path, 'rb') as image_file:
-                files = {
-                    'images': image_file,
-                    'organs': (None, 'auto'),  # Auto-detect plant organ
-                    'modifiers': (None, 'crops'),  # Crop processing for better focus
-                    'lang': (None, 'en')
-                }
-                
-                params = {
-                    'api-key': PLANTNET_API_KEY,
-                    'include-related-images': 'false'  # Faster response
-                }
-                
-                # Optimized timeout for faster response
-                response = requests.post(url, files=files, params=params, timeout=5)
+            const toxicityClass = plantResult.toxicity <= 30 ? 'toxicity-low' : 
+                                 plantResult.toxicity <= 70 ? 'toxicity-medium' : 'toxicity-high';
             
-            if response.status_code == 200:
-                data = response.json()
-                
-                if data.get('results') and len(data['results']) > 0:
-                    result = data['results'][0]
-                    species = result.get('species', {})
-                    score = result.get('score', 0)
+            const edibleClass = plantResult.edible === 'Yes' ? 'edible-yes' : 
+                               plantResult.edible === 'No' ? 'edible-no' : 'edible-unknown';
+            
+            const diseasesList = plantResult.diseases ? 
+                plantResult.diseases.join(', ') : 'No common diseases';
+            
+            resultHtml = `
+                <div class="plant-result">
+                    <div class="plant-name">${plantResult.plant}</div>
+                    <div class="plant-description">${plantResult.description}</div>
                     
-                    # Filter out low-confidence and generic results
-                    if score > 0.15:  # Minimum confidence threshold
-                        scientific_name = species.get('scientificNameWithoutAuthor', 'Unknown')
-                        common_names = species.get('commonNames', [])
-                        family = species.get('family', {}).get('scientificNameWithoutAuthor', 'Unknown')
-                        
-                        # Filter common names to avoid generic terms
-                        good_names = [name for name in common_names 
-                                    if not any(generic in name.lower() for generic in 
-                                             ['hybrid', 'sp.', 'species', 'cultivar', 'variety'])]
-                        
-                        common_name = good_names[0] if good_names else scientific_name.split()[-1]
-                        confidence = round(score * 100, 1)
-                        
-                        if confidence > highest_confidence:
-                            best_result = {
-                                'plant_name': common_name,
-                                'scientific_name': scientific_name,
-                                'common_names': good_names,
-                                'confidence': confidence,
-                                'family': family,
-                                'description': f"PlantNet identification: {scientific_name}",
-                                'region': 'Global' if project != 'weurope' else 'Europe',
-                                'toxicity': 50,
-                                'edible': False,
-                                'diseases': [],
-                                'care_tips': f'Consult botanical references for {common_name} care',
-                                'source': f'PlantNet-{project}'
-                            }
-                            highest_confidence = confidence
-                            
-                            # If high confidence, use immediately
-                            if confidence > 70:
-                                logging.info(f"High confidence result from {project}: {scientific_name} ({confidence}%)")
-                                break
-                                
-        except requests.Timeout:
-            logging.warning(f"PlantNet {project} timeout - trying next database")
-            continue
-        except Exception as e:
-            logging.warning(f"PlantNet {project} error: {e}")
-            continue
-    
-    if best_result and best_result['confidence'] > 20:
-        logging.info(f"PlantNet best result: {best_result['scientific_name']} ({best_result['confidence']}%)")
-        return best_result
-    
-    logging.info("PlantNet API returned no confident results")
-    return None
-
-def identify_plant_local(image_path):
-    """Optimized plant identification with faster processing"""
-    try:
-        # Load and analyze the image quickly
-        with Image.open(image_path) as img:
-            # Convert to RGB if needed
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-            
-            # Fast image analysis - smaller size for speed
-            analysis_img = img.resize((112, 112))  # Smaller for faster processing
-            pixels = list(analysis_img.getdata())
-            
-            # Quick color analysis
-            green_pixels = red_pixels = yellow_pixels = 0
-            total_pixels = len(pixels)
-            
-            for r, g, b in pixels:
-                if g > r and g > b and g > 80:  # Green vegetation
-                    green_pixels += 1
-                elif r > g and r > b and r > 100:  # Red flowers/fruits
-                    red_pixels += 1
-                elif r > 150 and g > 150 and b < 100:  # Yellow flowers
-                    yellow_pixels += 1
-            
-            green_ratio = green_pixels / total_pixels
-            red_ratio = red_pixels / total_pixels
-            yellow_ratio = yellow_pixels / total_pixels
-            
-            # Fast botanical classification with pre-computed database
-            plant_candidates = []
-            confidence_base = 60
-            
-            # Quick classification logic
-            if green_ratio > 0.4 and red_ratio < 0.1:
-                # Likely foliage plant
-                foliage_plants = [
-                    "Monstera deliciosa", "Epipremnum aureum", "Philodendron hederaceum",
-                    "Ficus lyrata", "Dracaena trifasciata", "Zamioculcas zamiifolia"
-                ]
-                plant_name = random.choice(foliage_plants)
-                confidence_base = 75
-            elif red_ratio > 0.15 or yellow_ratio > 0.1:
-                # Likely flowering plant
-                flowering_plants = [
-                    "Spathiphyllum wallisii", "Anthurium andraeanum", "Saintpaulia ionantha",
-                    "Hibiscus rosa-sinensis", "Cyclamen persicum"
-                ]
-                plant_name = random.choice(flowering_plants)
-                confidence_base = 70
-            elif green_ratio > 0.25 and green_ratio < 0.45:
-                # Likely succulent
-                succulents = [
-                    "Aloe barbadensis", "Crassula ovata", "Echeveria elegans",
-                    "Sedum morganianum", "Haworthia fasciata"
-                ]
-                plant_name = random.choice(succulents)
-                confidence_base = 65
-            else:
-                # General plant
-                general_plants = [
-                    "Pothos", "Snake Plant", "Peace Lily", "Rubber Plant", "Spider Plant"
-                ]
-                plant_name = random.choice(general_plants)
-                confidence_base = 55
-            
-            # Get plant details
-            plant_details = get_plant_details(plant_name)
-            
-            return {
-                'plant_name': plant_name,
-                'scientific_name': plant_name,
-                'confidence': round(confidence_base + random.uniform(-10, 15), 1),
-                'family': plant_details['family'],
-                'description': f"Quick analysis suggests this is {plant_name}",
-                'region': plant_details['region'],
-                'toxicity': plant_details['toxicity'],
-                'edible': plant_details['edible'],
-                'diseases': plant_details['diseases'],
-                'care_tips': plant_details['care_tips']
-            }
-            analysis_img = img.resize((224, 224))  # Standard size for analysis
-            pixels = list(analysis_img.getdata())
-            
-            # Comprehensive color and feature analysis
-            green_pixels = red_pixels = blue_pixels = yellow_pixels = brown_pixels = 0
-            apple_red_pixels = 0  # Specific apple red detection
-            apple_yellow_pixels = 0  # Apple yellow/green detection
-            leaf_green_pixels = 0  # Specific leaf green
-            bark_brown_pixels = 0  # Tree bark detection
-            bright_red_pixels = 0  # For roses and bright flowers
-            large_leaf_pixels = 0  # For banana-like plants
-            total_pixels = len(pixels)
-            
-            # Special feature detection
-            special_features = []
-            
-            # Enhanced pixel analysis with improved color detection
-            for r, g, b in pixels:
-                # Bright red for roses and carnivorous plants
-                if r > 160 and g < r * 0.7 and b < r * 0.7:
-                    bright_red_pixels += 1
-                    red_pixels += 1
-                # Apple colors (red and yellow varieties)
-                elif (140 <= r <= 255 and 70 <= g <= 180 and 50 <= b <= 140):
-                    apple_red_pixels += 1
-                    red_pixels += 1
-                elif (100 <= r <= 200 and 130 <= g <= 220 and 60 <= b <= 140):
-                    apple_yellow_pixels += 1
-                    yellow_pixels += 1
-                # Banana plant green (very vibrant green)
-                elif g > 140 and r < g * 0.8 and b < g * 0.8:
-                    large_leaf_pixels += 1
-                    leaf_green_pixels += 1
-                    green_pixels += 1
-                # Normal leaf green
-                elif g > r and g > b and g > 80:
-                    leaf_green_pixels += 1
-                    green_pixels += 1
-                # Tree bark brown
-                elif 60 <= r <= 140 and 40 <= g <= 120 and 20 <= b <= 90 and abs(r-g) < 40:
-                    bark_brown_pixels += 1
-                    brown_pixels += 1
-                # General color categories
-                elif g > r and g > b and g > 50:
-                    green_pixels += 1
-                elif r > g and r > b and r > 70:
-                    red_pixels += 1
-                elif r > 100 and g > 100 and b < min(r, g) * 0.8:
-                    yellow_pixels += 1
-                elif b > r and b > g and b > 50:
-                    blue_pixels += 1
-            
-            green_ratio = green_pixels / total_pixels
-            red_ratio = red_pixels / total_pixels
-            yellow_ratio = yellow_pixels / total_pixels
-            apple_fruit_ratio = (apple_red_pixels + apple_yellow_pixels) / total_pixels
-            leaf_ratio = leaf_green_pixels / total_pixels
-            bark_ratio = bark_brown_pixels / total_pixels
-            bright_red_ratio = bright_red_pixels / total_pixels
-            large_leaf_ratio = large_leaf_pixels / total_pixels
-            
-            # Smart feature detection based on comprehensive analysis
-            if bright_red_ratio > 0.08:
-                special_features.append('bright_flowers')
-            if large_leaf_ratio > 0.25:
-                special_features.append('tropical_leaves')
-            if red_ratio > 0.12 and green_ratio < 0.5:
-                special_features.append('carnivorous_trap')
-            if apple_fruit_ratio > 0.08:
-                special_features.append('tree_fruits')
-            if green_ratio > 0.7:
-                special_features.append('very_green')
-            if bark_ratio > 0.05:
-                special_features.append('woody_plant')
-            
-            # Image composition analysis
-            aspect_ratio = width / height if height > 0 else 1.0
-            if width > height * 1.3:
-                special_features.append('landscape_view')
-            if aspect_ratio < 0.7:
-                special_features.append('tall_plant')
-            
-            # Comprehensive plant identification system
-            plant_database = {
-                'venus_flytrap': {
-                    'plants': [
-                        ("Dionaea muscipula", "Venus flytrap with distinctive snap traps that capture insects, native to North Carolina wetlands."),
-                    ],
-                    'conditions': lambda features: 'carnivorous_trap' in features and 'bright_flowers' in features
-                },
-                'banana_plant': {
-                    'plants': [
-                        ("Musa acuminata", "Banana plant with large paddle-shaped leaves and characteristic growth pattern."),
-                        ("Musa paradisiaca", "Plantain banana with broad tropical leaves and starchy fruit clusters."),
-                    ],
-                    'conditions': lambda features: 'tropical_leaves' in features and 'very_green' in features
-                },
-                'garden_rose': {
-                    'plants': [
-                        ("Rosa hybrid", "Garden rose with fragrant blooms and thorny stems, popular ornamental flowering plant."),
-                        ("Rosa rugosa", "Beach rose with wrinkled leaves and disease resistance."),
-                    ],
-                    'conditions': lambda features: 'bright_flowers' in features and ('woody_plant' in features or len([f for f in features if 'flower' in f]) > 0)
-                },
-                'tropical_houseplants': {
-                    'plants': [
-                        ("Monstera deliciosa", "Split-leaf philodendron native to Central American rainforests, known for its fenestrated leaves."),
-                        ("Epipremnum aureum", "Golden pothos from Southeast Asia, excellent air purifier with heart-shaped variegated leaves."),
-                        ("Philodendron hederaceum", "Heartleaf philodendron, fast-growing vine with glossy green heart-shaped foliage."),
-                        ("Ficus lyrata", "Fiddle-leaf fig from western Africa, featuring large violin-shaped leaves and upright growth."),
-                        ("Ficus elastica", "Indian rubber tree with thick, glossy leaves and natural latex production capabilities."),
-                        ("Dracaena trifasciata", "Snake plant (Sansevieria) from West Africa, extremely drought-tolerant with sword-like leaves."),
-                        ("Zamioculcas zamiifolia", "ZZ plant from eastern Africa, waxy dark green leaves, extremely low maintenance.")
-                    ],
-                    'conditions': lambda g, r, y, special: g > 0.4 and r < 0.1 and y < 0.1
-                },
-                'flowering_plants': {
-                    'plants': [
-                        ("Saintpaulia ionantha", "African violet from Tanzania, compact rosette with velvety leaves and colorful flowers."),
-                        ("Spathiphyllum wallisii", "Peace lily from tropical Americas, white spathes and excellent air purification."),
-                        ("Anthurium andraeanum", "Flamingo flower from Colombia, heart-shaped red bracts and glossy foliage."),
-                        ("Phalaenopsis orchid", "Moth orchid from Southeast Asia, long-lasting blooms in various colors."),
-                        ("Cyclamen persicum", "Persian cyclamen with heart-shaped leaves and reflexed petals."),
-                        ("Begonia rex", "Rex begonia with colorful asymmetrical leaves and small pink flowers."),
-                        ("Hibiscus rosa-sinensis", "Chinese hibiscus with large trumpet-shaped flowers in bright colors.")
-                    ],
-                    'conditions': lambda g, r, y: (r > 0.15 or y > 0.1) and g > 0.2
-                },
-                'succulents_cacti': {
-                    'plants': [
-                        ("Aloe barbadensis", "True aloe vera from Arabian Peninsula, medicinal gel-filled thick leaves."),
-                        ("Crassula ovata", "Jade plant from South Africa, thick oval leaves and tree-like growth pattern."),
-                        ("Echeveria elegans", "Mexican snowball succulent with blue-green rosettes and pink flower spikes."),
-                        ("Sedum morganianum", "Burro's tail from Mexico, trailing succulent with plump blue-green leaves."),
-                        ("Haworthia fasciata", "Zebra plant from South Africa, distinctive white stripes on dark green leaves."),
-                        ("Opuntia microdasys", "Bunny ears cactus from Mexico, flat oval pads with golden glochids."),
-                        ("Schlumbergera x buckleyi", "Christmas cactus hybrid, segmented leaves and winter blooms.")
-                    ],
-                    'conditions': lambda g, r, y: g > 0.25 and g < 0.45 and r < 0.15
-                },
-                'herbs_culinary': {
-                    'plants': [
-                        ("Ocimum basilicum", "Sweet basil from India, aromatic leaves essential for Mediterranean cuisine."),
-                        ("Mentha x piperita", "Peppermint hybrid, cooling menthol-rich leaves for teas and cooking."),
-                        ("Rosmarinus officinalis", "Rosemary from Mediterranean, needle-like aromatic leaves, drought tolerant."),
-                        ("Lavandula angustifolia", "English lavender with fragrant purple spikes, attracts beneficial insects."),
-                        ("Thymus vulgaris", "Common thyme from Mediterranean, small aromatic leaves for seasoning."),
-                        ("Salvia officinalis", "Garden sage with grey-green velvety leaves and culinary uses."),
-                        ("Petroselinum crispum", "Curly parsley, biennial herb rich in vitamins and minerals.")
-                    ],
-                    'conditions': lambda g, r, y: g > 0.35 and (y > 0.05 or r > 0.05)
-                },
-                'apple_trees': {
-                    'plants': [
-                        ("Malus domestica", "Apple tree with characteristic round red and yellow fruits, serrated leaves, and branching structure typical of orchard cultivation."),
-                        ("Malus domestica", "Domestic apple tree showing mature fruits in various stages of ripeness, from green to red."),
-                        ("Malus domestica", "Apple tree with abundant fruit production, displaying the classic apple orchard appearance.")
-                    ],
-                    'conditions': lambda af, l, b, g, r: (af > 0.08 and l > 0.2 and g > 0.3) or (af > 0.12 and g > 0.25)  # More flexible apple detection
-                },
-                'fruit_trees': {
-                    'plants': [
-                        ("Citrus limon", "Lemon tree with oval leaves, fragrant white flowers, and yellow citrus fruits."),
-                        ("Prunus persica", "Peach tree with lance-shaped leaves and fuzzy round fruits."),
-                        ("Prunus avium", "Sweet cherry with oval serrated leaves and red stone fruits."),
-                        ("Pyrus communis", "Pear tree with oval leaves and bell-shaped fruits."),
-                        ("Ficus carica", "Fig tree with large lobed leaves and unique hollow fruits.")
-                    ],
-                    'conditions': lambda af, l, b, g, r: (g > 0.25 and (r > 0.08 or af > 0.05) and l > 0.2)
-                },
-                'trees_woody': {
-                    'plants': [
-                        ("Acer palmatum", "Japanese maple with palmate leaves, spectacular autumn color changes."),
-                        ("Buxus sempervirens", "Common boxwood, dense evergreen shrub ideal for topiary and hedging."),
-                        ("Rhododendron ponticum", "Pontian rhododendron with large flower clusters in spring."),
-                        ("Camellia japonica", "Japanese camellia, evergreen with waxy flowers in winter and spring."),
-                        ("Hydrangea macrophylla", "Bigleaf hydrangea with pH-dependent flower color changes."),
-                        ("Magnolia grandiLumon", "Southern magnolia with large fragrant white flowers and glossy leaves."),
-                        ("Prunus serrulata", "Japanese cherry with pink spring blossoms and serrated leaves.")
-                    ],
-                    'conditions': lambda g, r, y: g > 0.3 and (r > 0.1 or y > 0.08)
-                },
-                'ferns_tropical': {
-                    'plants': [
-                        ("Nephrolepis exaltata", "Boston fern with arching fronds, excellent for humid environments."),
-                        ("Adiantum raddianum", "Maidenhair fern with delicate fan-shaped leaflets on black stems."),
-                        ("Pteris cretica", "Cretan brake fern with variegated fronds and easy care requirements."),
-                        ("Asplenium nidus", "Bird's nest fern with glossy strap-like fronds arranged in rosette."),
-                        ("Platycerium bifurcatum", "Staghorn fern, epiphytic with antler-shaped fertile fronds.")
-                    ],
-                    'conditions': lambda g, r, y: g > 0.5 and r < 0.05 and y < 0.05
-                }
-            }
-            
-            # Enhanced analysis with shape and texture detection
-            brightness = sum(r + g + b for r, g, b in pixels[:1000]) / (3000 * 255)
-            
-            # Priority-based plant identification
-            identified_plant = None
-            confidence = 0.0
-            
-            # Check specific plant types first
-            if 'carnivorous_trap' in special_features and bright_red_ratio > 0.08:
-                identified_plant = ("Dionaea muscipula", "Venus flytrap with distinctive red-lined snap traps for catching insects.")
-                confidence = 0.88
-            elif 'tropical_leaves' in special_features and green_ratio > 0.65:
-                identified_plant = ("Musa acuminata", "Banana plant with characteristic large paddle-shaped tropical leaves.")
-                confidence = 0.85
-            elif 'bright_flowers' in special_features and red_ratio > 0.15:
-                identified_plant = ("Rosa hybrid", "Garden rose displaying vibrant blooms and classic flowering characteristics.")
-                confidence = 0.82
-            elif 'tree_fruits' in special_features and 'woody_plant' in special_features:
-                identified_plant = ("Malus domestica", "Apple tree with visible fruit development and characteristic branching structure.")
-                confidence = 0.85
-            
-            # If specific identification succeeded, use it
-            if identified_plant:
-                scientific_name, description = identified_plant
-                plant_name = scientific_name.split()[1] if len(scientific_name.split()) > 1 else scientific_name
-                
-                # Format the plant name properly
-                if 'muscipula' in scientific_name:
-                    plant_name = "Venus Flytrap"
-                elif 'Musa' in scientific_name:
-                    plant_name = "Banana Plant"
-                elif 'Rosa' in scientific_name:
-                    plant_name = "Rose"
-                elif 'Malus' in scientific_name:
-                    plant_name = "Apple Tree"
-                
-                confidence_percent = int(confidence * 100)
-            else:
-                # Fallback to general plant database logic
-                matching_categories = []
-                for category, data in plant_database.items():
-                    try:
-                        if hasattr(data['conditions'], '__call__'):
-                            if data['conditions'](special_features):
-                                matching_categories.append(category)
-                    except:
-                        continue
-            
-            # Select category with specialized plants as priority
-            if matching_categories:
-                # Specialized plants get priority over general categories
-                priority_order = ['carnivorous_plants', 'roses', 'banana_trees', 'apple_trees', 'fruit_trees', 'flowering_plants', 'succulents_cacti', 'herbs_culinary', 'ferns_tropical', 'tropical_houseplants', 'trees_woody']
-                selected_category = None
-                
-                for priority_cat in priority_order:
-                    if priority_cat in matching_categories:
-                        selected_category = priority_cat
-                        break
-                
-                if not selected_category:
-                    selected_category = matching_categories[0]
-                
-                plants = plant_database[selected_category]['plants']
-                
-                # For specialized categories, use specific selection logic
-                if selected_category in ['carnivorous_plants', 'roses', 'banana_trees', 'apple_trees']:
-                    plant_info = plants[0]  # Use the most detailed description for specialized plants
-                    confidence = 0.85 + random.uniform(0.05, 0.12)  # High confidence for specialized detection
-                else:
-                    plant_info = random.choice(plants)
-                    base_confidence = 0.78 if len(matching_categories) == 1 else 0.72
-                    confidence = base_confidence + random.uniform(0.05, 0.15)
-                
-            else:
-                # Priority-based intelligent identification with comprehensive analysis
-                if green_ratio > 0.6 and yellow_ratio > 0.05 and large_leaf_ratio > 0.2:
-                    # Strong banana characteristics
-                    plant_info = ("Musa acuminata", "Banana plant with characteristic large paddle-shaped leaves and tropical growth pattern.")
-                    confidence = 0.85 + random.uniform(0.05, 0.10)
-                elif red_ratio > 0.2 and bright_red_ratio > 0.1:
-                    # Strong red coloration suggests roses or carnivorous plants
-                    if green_ratio < 0.4:
-                        plant_info = ("Dionaea muscipula", "Venus flytrap with distinctive red coloration inside snap traps.")
-                        confidence = 0.82 + random.uniform(0.05, 0.10)
-                    else:
-                        plant_info = ("Rosa hybrid", "Garden rose displaying vibrant red blooms and classic rose characteristics.")
-                        confidence = 0.80 + random.uniform(0.05, 0.12)
-                elif apple_fruit_ratio > 0.05 and green_ratio > 0.20 and ('tree_landscape' in special_features or bark_ratio > 0.02):
-                    plant_info = ("Malus domestica", "Apple tree showing fruit development in orchard or garden setting.")
-                    confidence = 0.82 + random.uniform(0.03, 0.08)
-                elif green_ratio > 0.5:
-                    # High green content - tropical or houseplants
-                    if large_leaf_ratio > 0.15:
-                        plant_info = ("Monstera deliciosa", "Split-leaf philodendron with large fenestrated leaves typical of tropical plants.")
-                        confidence = 0.75 + random.uniform(0.05, 0.15)
-                    else:
-                        tropical_plants = [
-                            ("Epipremnum aureum", "Golden pothos with heart-shaped leaves, popular trailing houseplant."),
-                            ("Philodendron hederaceum", "Heartleaf philodendron with glossy green foliage."),
-                            ("Ficus lyrata", "Fiddle-leaf fig with distinctive violin-shaped leaves.")
-                        ]
-                        plant_info = random.choice(tropical_plants)
-                        confidence = 0.70 + random.uniform(0.05, 0.15)
-                elif red_ratio > 0.12:
-                    # Moderate red - flowering plants
-                    flowering_plants = [
-                        ("Rosa hybrid", "Garden rose with colorful blooms and serrated leaflets."),
-                        ("Hibiscus rosa-sinensis", "Chinese hibiscus with large trumpet-shaped flowers."),
-                        ("Anthurium andraeanum", "Flamingo flower with heart-shaped bracts.")
-                    ]
-                    plant_info = random.choice(flowering_plants)
-                    confidence = 0.65 + random.uniform(0.05, 0.15)
-                else:
-                    # Default to common houseplants
-                    common_plants = [
-                        ("Sansevieria trifasciata", "Snake plant with upright sword-like leaves, extremely low maintenance."),
-                        ("Pothos aureus", "Golden pothos, easy-care trailing vine perfect for beginners."),
-                        ("Chlorophytum comosum", "Spider plant with arching leaves and baby plantlets.")
-                    ]
-                    plant_info = random.choice(common_plants)
-                    confidence = 0.60 + random.uniform(0.05, 0.15)
-            
-            plant_name, description = plant_info
-            plant_details = get_plant_details(plant_name)
-            
-            return {
-                'plant_name': plant_name,
-                'confidence': round(confidence, 2),
-                'description': description,
-                'scientific_name': plant_name.split(' ')[0] + ' ' + plant_name.split(' ')[1] if len(plant_name.split(' ')) > 1 else plant_name,
-                'family': plant_details['family'],
-                'region': plant_details['region'],
-                'toxicity': plant_details['toxicity'],
-                'edible': plant_details['edible'],
-                'diseases': plant_details['diseases'],
-                'care_tips': plant_details['care_tips']
-            }
-                
-    except Exception as e:
-        logging.error(f"Error in plant identification: {e}")
-        # Enhanced fallback with descriptions
-        fallback_plants = [
-            ("Pothos", "Hardy trailing vine perfect for beginners, tolerates low light conditions."),
-            ("Snake Plant", "Architectural succulent with upright leaves, extremely low maintenance."),
-            ("Peace Lily", "Elegant flowering plant that indicates when it needs water by drooping."),
-            ("Spider Plant", "Easy-care plant that produces baby plants, great for propagation.")
-        ]
-        plant_info = random.choice(fallback_plants)
-        plant_name, description = plant_info
-        plant_details = get_plant_details(plant_name)
-        
-        return {
-            'plant_name': plant_name,
-            'confidence': 0.6,
-            'description': description,
-            'scientific_name': plant_name,
-            'family': plant_details['family'],
-            'region': plant_details['region'],
-            'toxicity': plant_details['toxicity'],
-            'edible': plant_details['edible'],
-            'diseases': plant_details['diseases'],
-            'care_tips': plant_details['care_tips']
-        }
-
-def cleanup_old_uploads():
-    """Clean up old uploaded files"""
-    try:
-        for filename in os.listdir(UPLOAD_FOLDER):
-            if filename != '.gitkeep':
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                # Delete files older than 1 hour
-                if os.path.isfile(file_path):
-                    file_age = os.path.getmtime(file_path)
-    except Exception as e:
-        print(f"Error cleaning up uploads: {e}")
-
-@app.route('/confirm')
-def confirm_email():
-    # This is the redirect target for Supabase email confirmation links
-    return render_template('confirm.html')
-
-
-@app.route('/callback')
-def callback():
-    # Handle Supabase login callback
-    try:
-        if session.get('user_id'):
-            return redirect(url_for('index'))
-        else:
-            return render_template('error.html', error='Authentication failed')
-    except Exception as e:
-        # Handle authentication error
-        logging.error(f"Error authenticating user: {e}")
-        return render_template('error.html', error='Authentication failed')
-
-
-@app.route('/app')
-def index():
-    """Main app page (DEV: allow all users for guest testing)"""
-    # DEV: Allow any user to access /app for guest testing, no session check
-    cleanup_old_uploads()
-    return render_template('index.html')
-
-
-@app.route('/predict', methods=['POST'])
-def predict():
-    """Handle plant identification from uploaded image"""
-    try:
-        # Check if file is in request
-        if 'image' not in request.files:
-            return jsonify({'error': 'No image file provided'}), 400
-        
-        file = request.files['image']
-        
-        # Check if file is selected
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        # Validate file
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'Invalid file type. Please upload PNG, JPG, JPEG, GIF, or WEBP images.'}), 400
-        
-        # Check file size
-        file.seek(0, os.SEEK_END)
-        file_size = file.tell()
-        file.seek(0)
-        
-        if file_size > MAX_FILE_SIZE:
-            return jsonify({'error': 'File too large. Maximum size is 16MB.'}), 400
-        
-        # Save file
-        filename = secure_filename(file.filename)
-        unique_filename = f"{uuid.uuid4()}_{filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        file.save(file_path)
-        
-        logging.info(f"Image saved: {file_path}")
-        
-        # Try PlantNet API first for accurate identification
-        identification = identify_plant_with_plantnet(file_path)
-        
-        # Fallback to local identification if PlantNet fails
-        if not identification:
-            logging.info("PlantNet failed, using local identification")
-            identification = identify_plant_local(file_path)
-        
-        plant_name = identification['plant_name']
-        logging.info(f"Plant identified: {plant_name} (confidence: {identification.get('confidence', 0)}%)")
-        
-        # Get Wikipedia description for additional context
-        wiki_description = get_wikipedia_summary(plant_name)
-        
-        # Use Wikipedia description if available and substantial
-        if wiki_description and len(wiki_description) > 50 and not wiki_description.startswith("No detailed"):
-            final_description = wiki_description
-            wiki_url = f"https://en.wikipedia.org/wiki/{plant_name.replace(' ', '_')}"
-        else:
-            final_description = identification.get('description', f'Information about {plant_name}')
-            wiki_url = None
-        
-        # Clean up uploaded file
-        try:
-            os.remove(file_path)
-        except Exception as e:
-            logging.error(f"Error removing uploaded file: {e}")
-        
-        # Return enhanced results
-        result = {
-            'plant_name': plant_name,
-            'description': final_description,
-            'care_tips': identification.get('care_tips', 'Standard plant care applies'),
-            'confidence': identification['confidence'],
-            'scientific_name': identification.get('scientific_name', plant_name),
-            'family': identification.get('family', 'Unknown'),
-            'region': identification.get('region', 'Unknown'),
-            'toxicity': identification.get('toxicity', 0),
-            'edible': identification.get('edible', False),
-            'diseases': identification.get('diseases', [])
+                    <div class="plant-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Family</div>
+                            <div class="detail-value">${plantResult.family || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Region</div>
+                            <div class="detail-value">${plantResult.region || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Toxicity</div>
+                            <div class="detail-value">${plantResult.toxicity || 50}%</div>
+                            <div class="toxicity-bar">
+                                <div class="toxicity-fill ${toxicityClass}" style="width: ${plantResult.toxicity || 50}%"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Edible</div>
+                            <div class="detail-value ${edibleClass}">${plantResult.edible || 'Unknown'}</div>
+                        </div>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            <div class="detail-label">Common Diseases</div>
+                            <div class="diseases-list">${diseasesList}</div>
+                        </div>
+                    </div>
+                    
+                    ${careList ? `
+                        <div class="care-tips">
+                            <h4>Care Tips:</h4>
+                            <ul>${careList}</ul>
+                        </div>
+                    ` : ''}
+                    <a href="${plantResult.wiki_url}" target="_blank" class="read-more-btn">
+                        <i class="fas fa-external-link-alt"></i>
+                        Read More on Wikipedia
+                    </a>
+                </div>
+            `;
         }
         
-        # Include common names if available from PlantNet
-        if 'common_names' in identification:
-            result['common_names'] = identification['common_names']
+        const messageHtml = `
+            <div class="chat-message bot-message" id="${messageId}">
+                <div class="message-avatar">
+                    <i class="fas fa-seedling"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-bubble">
+                        <p>${text}</p>
+                        ${resultHtml}
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+            </div>
+        `;
         
-        # Only include wiki_url if page exists
-        if wiki_url:
-            result['wiki_url'] = wiki_url
-        # Store the structured plant identification in session for chat context
-        session['last_plant'] = result
-        # Add a summary to chat history for context (if chat_sessions exists)
-        session_id = request.form.get('session_id', 'default')
-        summary = f"Identified plant: {result['plant_name']} (Family: {result.get('family', 'Unknown')}, Region: {result.get('region', 'Unknown')})"
-        if 'chat_sessions' in globals():
-            if session_id not in chat_sessions:
-                chat_sessions[session_id] = {'history': [], 'context': {}}
-            chat_sessions[session_id]['history'].append({'role': 'bot', 'message': summary})
-        return jsonify(result)
+        this.chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        this.scrollToBottom();
+    }
+    
+    scrollToBottom() {
+        if (!this.chatContainer) return;
+        setTimeout(() => {
+            this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+        }, 100);
+    }
+    
+    async processImage(file) {
+        // Show loading
+        this.showLoading();
         
-    except Exception as e:
-        logging.error(f"Error in predict endpoint: {e}")
-        return jsonify({'error': 'An error occurred while processing your image. Please try again.'}), 500
+        // Add bot typing message
+        this.addBotMessage('Analyzing your plant image...');
 
-@app.route('/chat', methods=['POST'])
-def chat():
-    """Handle text-based botanical questions with memory and persist to DB if logged in."""
-    try:
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
-        session_id = data.get('session_id', 'default')
-        user_id = session.get('user_id')
-        if not user_message:
-            return jsonify({'error': 'No message provided'}), 400
-        # Initialize session if not exists
-        if session_id not in chat_sessions:
-            chat_sessions[session_id] = {'history': [], 'context': {}}
-        # Add user message to history
-        chat_sessions[session_id]['history'].append({'role': 'user', 'message': user_message})
-        # Save to DB if logged in
-        if user_id and SUPABASE_AVAILABLE and session_id != 'default':
-            save_message_to_db(session_id, user_id, 'user', user_message)
-        greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening']
-        who_are_you = ['who are you', 'what are you', 'your name', 'who r u']
-        followup_words = ['and where', 'and how', 'where', 'how', 'when', 'why', 'what about', 'and what', 'and when', 'and why']
-        message_lower = user_message.lower().strip()
-        # Greetings
-        if any(greet in message_lower for greet in greetings) and len(message_lower.split()) <= 4:
-            response = "Hello! I'm Lumon, your botanical expert. How can I help you today?"
-            typing_delay = random.uniform(1, 2)
-        # Who are you
-        elif any(q in message_lower for q in who_are_you):
-            response = "I'm Lumon, your AI-powered botanist. Ask me anything about plants, gardening, or botany!"
-            typing_delay = random.uniform(1, 2)
-        # If user asks for more detail or a follow-up, use previous context
-        elif any(word in message_lower for word in ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']) or any(fw in message_lower for fw in followup_words):
-            # Find last bot and user response
-            prev_bot = None
-            prev_user = None
-            for msg in reversed(chat_sessions[session_id]['history'][:-1]):
-                if not prev_bot and msg['role'] == 'bot':
-                    prev_bot = msg['message']
-                if not prev_user and msg['role'] == 'user':
-                    prev_user = msg['message']
-                if prev_bot and prev_user:
-                    break
-            context_message = ''
-            if prev_bot:
-                context_message += prev_bot + "\n"
-            if prev_user:
-                context_message += prev_user + "\n"
-            context_message += user_message
-            response = generate_botanical_response_with_memory(context_message, chat_sessions[session_id])
-            typing_delay = random.uniform(1, 2)
-        # Botanical question
-        elif is_botanical_question(user_message):
-            response = generate_botanical_response_with_memory(user_message, chat_sessions[session_id])
-            typing_delay = random.uniform(1, 2)
-        # Irrelevant question (strict, smart, and context-aware response)
-        else:
-            # Large topic-to-response mapping for 1000+ general topics
-            topic_responses = {
-                # Existing examples
-                'beard': "That's not a question for a botanist, I'm afraid. Consult a dermatologist or barber for advice on beard growth.",
-                'hair': "I'm a plant expert, not a trichologist. For hair questions, consult a medical professional.",
-                'dog': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
-                'cat': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
-                'pet': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
-                'india': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
-                'usa': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
-                'china': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
-                'country': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
-                'region': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
-                'tech': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
-                'computer': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
-                'software': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
-                'app': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
-                'food': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
-                'recipe': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
-                'cook': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
-                'eat': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
-                'math': "I'm not a math tutor, but I can help with plant science questions!",
-                'calculate': "I'm not a math tutor, but I can help with plant science questions!",
-                'number': "I'm not a math tutor, but I can help with plant science questions!",
-                'weather': "I can't provide weather forecasts, but I can explain how weather affects plants.",
-                'forecast': "I can't provide weather forecasts, but I can explain how weather affects plants.",
-                'medicine': "I can discuss plant diseases, but for human health, consult a medical professional.",
-                'doctor': "I can discuss plant diseases, but for human health, consult a medical professional.",
-                'disease': "I can discuss plant diseases, but for human health, consult a medical professional.",
-                'news': "I'm here for plant science, not current events or sports.",
-                'politics': "I'm here for plant science, not current events or sports.",
-                'sports': "I'm here for plant science, not current events or sports.",
-                # Add 1000+ more topics (examples below, expand as needed)
-                'finance': "I'm not a financial advisor. For finance questions, consult a professional.",
-                'bank': "I'm not a financial advisor. For banking questions, consult your bank.",
-                'stock': "I can't provide stock advice. Please consult a financial expert.",
-                'investment': "I can't provide investment advice. Please consult a financial advisor.",
-                'movie': "I'm not a movie critic. For film recommendations, try a movie database or critic.",
-                'music': "I'm not a music expert. For music questions, consult a musicologist or streaming service.",
-                'song': "I'm not a music expert. For music questions, consult a musicologist or streaming service.",
-                'artist': "I'm not an art historian. For art questions, consult an art expert.",
-                'painting': "I'm not an art historian. For art questions, consult an art expert.",
-                'car': "I'm not an automotive expert. For car questions, consult a mechanic or car specialist.",
-                'engine': "I'm not an automotive expert. For car questions, consult a mechanic or car specialist.",
-                'travel': "I'm not a travel agent. For travel advice, consult a travel professional.",
-                'flight': "I'm not a travel agent. For flight information, consult an airline or travel website.",
-                'hotel': "I'm not a travel agent. For hotel bookings, consult a travel website or agent.",
-                'game': "I'm not a gaming expert. For game advice, consult a gaming community or expert.",
-                'playstation': "I'm not a gaming expert. For PlayStation questions, consult Sony or a gaming forum.",
-                'xbox': "I'm not a gaming expert. For Xbox questions, consult Microsoft or a gaming forum.",
-                'nintendo': "I'm not a gaming expert. For Nintendo questions, consult Nintendo or a gaming forum.",
-                'fashion': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
-                'clothes': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
-                'shoes': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
-                'makeup': "I'm not a beauty expert. For makeup advice, consult a beautician or makeup artist.",
-                'beauty': "I'm not a beauty expert. For beauty advice, consult a beautician or dermatologist.",
-                'law': "I'm not a lawyer. For legal advice, consult a legal professional.",
-                'court': "I'm not a lawyer. For legal advice, consult a legal professional.",
-                'crime': "I'm not a lawyer. For legal advice, consult a legal professional.",
-                'history': "I'm not a historian. For history questions, consult a historian or history resource.",
-                'war': "I'm not a historian. For history questions, consult a historian or history resource.",
-                'space': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
-                'planet': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
-                'star': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
-                'physics': "I'm not a physicist. For physics questions, consult a physics expert.",
-                'chemistry': "I'm not a chemist. For chemistry questions, consult a chemistry expert.",
-                'biology': "I can help with plant biology, but for general biology, consult a biologist.",
-                'psychology': "I'm not a psychologist. For mental health questions, consult a psychologist or counselor.",
-                'philosophy': "I'm not a philosopher. For philosophy questions, consult a philosophy expert.",
-                'religion': "I'm not a theologian. For religious questions, consult a religious leader or scholar.",
-                'language': "I'm not a linguist. For language questions, consult a linguist or language teacher.",
-                'translation': "I'm not a translator. For translation help, consult a language expert or translation service.",
-                'coding': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
-                'python': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
-                'java': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
-                'javascript': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
-                # ... (add hundreds more as needed, or load from a large list)
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to identify plant');
             }
-            found_topic = None
-            for topic in topic_responses:
-                if topic in message_lower:
-                    found_topic = topic
-                    break
-            if found_topic:
-                response = topic_responses[found_topic]
-            else:
-                response = "I'm not able to help with that topic. Please ask about plants, gardening, or botany."
-            typing_delay = random.uniform(1, 2)
-        time.sleep(typing_delay)
-        # Add bot response to history
-        chat_sessions[session_id]['history'].append({'role': 'bot', 'message': response})
-        # Save bot message to DB
-        if user_id and SUPABASE_AVAILABLE and session_id != 'default':
-            save_message_to_db(session_id, user_id, 'bot', response)
-        if len(chat_sessions[session_id]['history']) > 20:
-            chat_sessions[session_id]['history'] = chat_sessions[session_id]['history'][-20:]
-        return jsonify({
-            'response': response,
-            'type': 'success',
-            'typing': True,
-            'typing_delay': typing_delay
-        })
-    except Exception as e:
-        logging.error(f"Error in chat endpoint: {e}")
-        return jsonify({'error': 'An error occurred while processing your message. Please try again.'}), 500
 
-def is_botanical_question(message):
-    """Check if the message is related to plants or botany (expanded and smarter)"""
-    botanical_keywords = [
-        # Core botanical terms
-        'plant', 'flower', 'tree', 'leaf', 'leaves', 'garden', 'gardening', 'botany', 'botanical',
-        'grow', 'growing', 'care', 'water', 'watering', 'soil', 'fertilizer', 'pruning', 'propagate',
-        'succulent', 'cactus', 'herb', 'vegetable', 'fruit', 'seed', 'seeds', 'bloom', 'blooming',
-        'houseplant', 'indoor', 'outdoor', 'photosynthesis', 'chlorophyll', 'roots', 'stem', 'stems',
-        'petal', 'petals', 'pollen', 'pollination', 'species', 'variety', 'cultivar', 'hybrid',
-        'perennial', 'annual', 'biennial', 'evergreen', 'deciduous', 'tropical', 'temperate',
-        'light', 'sunlight', 'shade', 'humidity', 'temperature', 'climate', 'season', 'seasonal',
-        'repot', 'repotting', 'transplant', 'mulch', 'compost', 'organic', 'disease', 'pest',
-        'fungus', 'bacteria', 'virus', 'nutrient', 'nitrogen', 'phosphorus', 'potassium',
-        'photosynthesis', 'respiration', 'transpiration', 'germination', 'phototropism',
-        'orchid', 'rose', 'fern', 'bamboo', 'palm', 'moss', 'algae', 'fungi', 'mushroom',
-        # Common fruits and vegetables
-        'strawberry', 'apple', 'banana', 'grape', 'orange', 'lemon', 'lime', 'blueberry', 'raspberry',
-        'blackberry', 'melon', 'watermelon', 'cantaloupe', 'peach', 'pear', 'plum', 'cherry', 'apricot',
-        'kiwi', 'pineapple', 'mango', 'papaya', 'avocado', 'tomato', 'potato', 'carrot', 'onion', 'lettuce',
-        'spinach', 'broccoli', 'cabbage', 'cauliflower', 'pepper', 'chili', 'bean', 'pea', 'corn', 'squash',
-        'pumpkin', 'zucchini', 'radish', 'turnip', 'beet', 'celery', 'cucumber', 'eggplant', 'garlic', 'ginger',
-        'herbs', 'basil', 'mint', 'oregano', 'thyme', 'sage', 'parsley', 'cilantro', 'dill', 'rosemary',
-        # Other common plant names
-        'sunflower', 'daisy', 'tulip', 'lily', 'iris', 'daffodil', 'marigold', 'pansy', 'begonia', 'azalea',
-        'hydrangea', 'peony', 'camellia', 'gardenia', 'jasmine', 'lavender', 'magnolia', 'hibiscus', 'bougainvillea',
-        'carnation', 'chrysanthemum', 'fuchsia', 'geranium', 'petunia', 'snapdragon', 'zinnia', 'wisteria',
-        'holly', 'ivy', 'maple', 'oak', 'pine', 'cedar', 'birch', 'willow', 'elm', 'ash', 'spruce', 'fir',
-    ]
-    message_lower = message.lower()
-    return any(keyword in message_lower for keyword in botanical_keywords)
+            // Hide loading
+            this.hideLoading();
+            
+            // Remove typing message
+            const lastMessage = this.chatContainer.lastElementChild;
+            if (lastMessage && lastMessage.textContent.includes('Analyzing')) {
+                lastMessage.remove();
+            }
 
-def generate_botanical_response_with_memory(message, session):
-    """Generate smart botanical responses with conversation memory"""
-    # Restrict to botany/plant/gardening questions only (ultra strict, minimal)
-    if not is_botanical_question(message):
-        return "Please ask me about plants, gardening, or botany."
-    try:
-        # Build context from recent conversation (last 100 exchanges for deep memory)
-        context = ""
-        if session['history']:
-            recent_messages = session['history'][-100:]  # Last 100 exchanges (user+bot)
-            context = "Recent conversation:\n"
-            for msg in recent_messages:
-                context += f"{msg['role'].title()}: {msg['message']}\n"
-            context += "\n"
+            // Show results with enhanced styling
+            const plantResult = {
+                plant: data.plant_name || data.plant,
+                description: data.description,
+                wiki_url: data.wiki_url,
+                care_tips: data.care_tips,
+                family: data.family,
+                region: data.region,
+                toxicity: data.toxicity,
+                edible: data.edible,
+                diseases: data.diseases
+            };
+            
+            this.addBotMessage('Great! I was able to identify your plant:', plantResult);
 
-        # Friendly greeting for greetings
-        greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening']
-        message_lower = message.lower().strip()
-        if any(greet in message_lower for greet in greetings) and len(message_lower.split()) <= 4:
-            time.sleep(1)  # Add a 1-second delay for greetings
-            return "Hello! I'm Lumon, your botanical expert. How can I help you today?"
+        } catch (error) {
+            console.error('Error:', error);
+            this.hideLoading();
+            
+            // Remove typing message
+            const lastMessage = this.chatContainer.lastElementChild;
+            if (lastMessage && lastMessage.textContent.includes('Analyzing')) {
+                lastMessage.remove();
+            }
+            
+            this.addBotMessage('Sorry, I had trouble identifying this plant. Please try another image or make sure the plant is clearly visible.');
+        }
+    }
 
-        # Determine if user wants a long answer
-        long_keywords = ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']
-        wants_long = any(word in message_lower for word in long_keywords)
-        # Detect if plant context is present
-        plant_context = ''
-        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
-        if any(word in message_lower for word in ambiguous_words) and session.get('last_plant'):
-            plant = session['last_plant']
-            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
-            wants_long = True  # If plant context is present, allow long answer
-        max_len = 1000 if wants_long else 200
-        search_range = 200 if wants_long else 100
-        trunc_len = max_len - 3  # for safety
+    showLoading() {
+        this.loadingOverlay.style.display = 'flex';
+        gsap.fromTo(this.loadingOverlay,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.3 }
+        );
+    }
 
-        # Adaptive prompt
-        if wants_long:
-            prompt = f"""You are Lumon, a botanical expert. Provide a complete, helpful answer to the user's question. Use the context if relevant.
+    hideLoading() {
+        gsap.to(this.loadingOverlay, {
+            opacity: 0,
+            duration: 0.3,
+            onComplete: () => {
+                this.loadingOverlay.style.display = 'none';
+            }
+        });
+    }
 
-{context}Current question: {message}{plant_context}
-
-Guidelines:
-- Give a full answer if needed.
-- Use simple, clear language.
-- End your answer with a period.
-
-Response:"""
-        else:
-            prompt = f"""You are Lumon, a botanical expert. Answer the user's question in 10 to 40 words, unless more is needed. Use the context if relevant.
-
-{context}Current question: {message}{plant_context}
-
-Guidelines:
-- Be clear and helpful.
-- End your answer with a period.
-
-Response:"""
-
-        # Try Gemini Pro first
-        if GOOGLE_API_KEY:
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(prompt)
-                if response and response.text:
-                    result = response.text.strip()
-                    # Truncate if too long, but always end at the last period (full sentence)
-                    if len(result) > max_len:
-                        truncated = result[:trunc_len]
-                        last_period = truncated.rfind('.')
-                        if last_period != -1:
-                            result = truncated[:last_period+1]
-                        else:
-                            # Try to find the next period after trunc_len (within next search_range chars)
-                            next_period = result.find('.', trunc_len, trunc_len + search_range)
-                            if next_period != -1:
-                                result = result[:next_period+1]
-                            else:
-                                last_space = truncated.rfind(' ')
-                                if last_space != -1:
-                                    result = truncated[:last_space]
-                                else:
-                                    result = truncated  # fallback if no space
-                    # Always end with a period
-                    if not result.endswith('.'):
-                        last_period = result.rfind('.')
-                        if last_period != -1:
-                            result = result[:last_period+1]
-                    return result
-                else:
-                    logging.warning("Empty response from Gemini, falling back to DeepSeek")
-                    return generate_deepseek_response_with_memory(message, session)
-            except Exception as e:
-                logging.error(f"Error with Gemini API: {e}")
-                return generate_deepseek_response_with_memory(message, session)
-        else:
-            logging.warning("Gemini API key not available, using DeepSeek")
-            return generate_deepseek_response_with_memory(message, session)
-    except Exception as e:
-        logging.error(f"Error in botanical response generation: {e}")
-        return generate_smart_fallback_response(message, session)
-
-def generate_botanical_response(message):
-    """Legacy function for backward compatibility"""
-    dummy_session = {'history': [], 'context': {}}
-    return generate_botanical_response_with_memory(message, dummy_session)
-
-def generate_deepseek_response_with_memory(message, session):
-    """Generate response using DeepSeek via Together.ai with memory"""
-    try:
-        if not together_client:
-            logging.warning("Together AI client not available, using fallback")
-            return generate_smart_fallback_response(message, session)
-        # Build context
-        context = ""
-        if session['history']:
-            recent_messages = session['history'][-4:]  # Last 2 exchanges
-            for msg in recent_messages:
-                context += f"{msg['role'].title()}: {msg['message']}\n"
-        # Detect if user wants long answer or plant context is present
-        long_keywords = ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']
-        wants_long = any(word in message.lower() for word in long_keywords)
-        plant_context = ''
-        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
-        if any(word in message.lower() for word in ambiguous_words) and session.get('last_plant'):
-            plant = session['last_plant']
-            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
-            wants_long = True
-        # Adaptive prompt
-        if wants_long:
-            prompt = f"""You are Lumon, a botanical expert. Provide a complete, helpful answer to the user's question. Use the context if relevant.\n\n{context}Current question: {message}{plant_context}\n\nGuidelines:\n- Give a full answer if needed.\n- Use simple, clear language.\n- End your answer with a period.\n\nResponse:"""
-        else:
-            prompt = f"""You are Lumon, a botanical expert. Answer the user's question in a clear, helpful way. Use the context if relevant.\n\n{context}Current question: {message}{plant_context}\n\nGuidelines:\n- Be clear and helpful.\n- End your answer with a period.\n\nResponse:"""
-        response = together_client.chat.completions.create(
-            model="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=512,
-            temperature=0.6
-        )
-        if response.choices and response.choices[0].message:
-            result = response.choices[0].message.content.strip()
-            # Always end at the last period
-            if not result.endswith('.'):
-                last_period = result.rfind('.')
-                if last_period != -1:
-                    result = result[:last_period+1]
-            return result
-        else:
-            logging.warning("Empty response from DeepSeek, using fallback")
-            return generate_smart_fallback_response(message, session)
-    except Exception as e:
-        logging.error(f"Error with DeepSeek API: {e}")
-        return generate_smart_fallback_response(message, session)
-
-def generate_deepseek_response(message):
-    """Legacy function for backward compatibility"""
-    dummy_session = {'history': [], 'context': {}}
-    return generate_deepseek_response_with_memory(message, dummy_session)
-
-def generate_smart_fallback_response(message, session):
-    """Generate smart fallback responses with memory when APIs are unavailable"""
-    message_lower = message.lower().strip()
+    // Helper methods for transitions and animations
+    fadeIn(element, duration = 0.3) {
+        gsap.fromTo(element,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: duration }
+        );
+    }
     
-    # Check conversation history for context
-    plant_mentioned = None
-    if session['history']:
-        for msg in session['history'][-6:]:
-            if msg['role'] == 'user':
-                for plant in ['apple', 'rose', 'tomato', 'mint', 'basil', 'orchid', 'cactus', 'fern']:
-                    if plant in msg['message'].lower():
-                        plant_mentioned = plant
-                        break
+    fadeOut(element, duration = 0.3) {
+        return new Promise(resolve => {
+            gsap.to(element, {
+                opacity: 0,
+                y: -20,
+                duration: duration,
+                onComplete: resolve
+            });
+        });
+    }
     
-    # Smart contextual responses
-    if 'water' in message_lower:
-        if plant_mentioned:
-            return f"For {plant_mentioned}, check soil moisture first. Water when top inch is dry."
-        return "Check soil moisture by inserting finger 1-2 inches deep. Water when dry."
+    // Show initial typing message
+    showInitialMessage() {
+        setTimeout(() => {
+            document.getElementById('initial-typing').style.display = 'none';
+            document.getElementById('initial-message').style.display = 'block';
+            
+            if (window.gsap) {
+                gsap.fromTo('#initial-message',
+                    { opacity: 0, y: 20 },
+                    { opacity: 1, y: 0, duration: 0.5 }
+                );
+            }
+        }, 2000);
+    }
     
-    elif 'light' in message_lower:
-        if plant_mentioned:
-            return f"{plant_mentioned.title()} needs appropriate light. Most prefer bright, indirect light."
-        return "Most houseplants thrive in bright, indirect light. Avoid direct afternoon sun."
-    
-    elif any(word in message_lower for word in ['prune', 'pruning', 'trim', 'cutting']):
-        if plant_mentioned:
-            if plant_mentioned == 'apple':
-                return "Apple trees should be pruned in late winter (February-March) when dormant. Remove dead, diseased, and crossing branches."
-            else:
-                return f"For {plant_mentioned}, prune in early spring before new growth. Remove dead and diseased parts first."
-        return "Prune in early spring before new growth. Remove dead, diseased, or crossing branches first."
-    
-    elif any(word in message_lower for word in ['yellow', 'brown', 'dying']):
-        return "Yellow/brown leaves often indicate overwatering or nutrient deficiency. Check soil drainage."
-    
-    elif 'fertilizer' in message_lower or 'feed' in message_lower:
-        return "Use balanced liquid fertilizer monthly during growing season (spring/summer)."
-    
-    elif 'pruning' in message_lower or 'trim' in message_lower:
-        return "Prune in early spring before new growth. Remove dead, diseased, or crossing branches first."
-    
-    elif any(word in message_lower for word in ['pest', 'bug', 'aphid']):
-        return "For common pests, try neem oil spray or insecticidal soap. Inspect plants regularly."
-    
-    elif 'repot' in message_lower:
-        return "Repot when roots circle the pot or emerge from drainage holes, typically every 1-2 years."
-    
-    else:
-        return "I need more details to help you properly. What specific plant issue are you facing?"
-
-def generate_fallback_response(message):
-    """Legacy function for backward compatibility"""
-    dummy_session = {'history': [], 'context': {}}
-    return generate_smart_fallback_response(message, dummy_session)
-
-def generate_contextual_botanical_response(message, context=""):
-    """Generate contextual botanical responses with dynamic content"""
-    message_lower = message.lower().strip()
-    
-    # Handle empty or very short messages
-    if len(message_lower) < 2:
-        return "I'm Lumon, your botanical expert! Ask me about plant care, identification, or any gardening questions."
-    
-    # Question word analysis for better matching
-    question_words = ['what', 'where', 'when', 'why', 'how', 'which', 'who']
-    has_question_word = any(word in message_lower for word in question_words)
-    
-    # Location/habitat questions
-    if 'where' in message_lower or ('found' in message_lower and has_question_word):
-        return "Most houseplants originate from tropical rainforests (pothos, monstera), arid regions (succulents, cacti), or temperate forests (ferns). For specific habitat information, upload a photo of your plant and I'll tell you exactly where it's native to!"
+    // Text input handling
+    handleTextInput() {
+        const value = this.textInput.value.trim();
+        this.sendBtn.disabled = value.length === 0;
         
-    # Plant identification questions  
-    elif any(phrase in message_lower for phrase in ['what is', 'what plant', 'identify', 'what type', 'name of', 'species']):
-        return "I can identify plants from photos! Upload a clear image showing leaves, stems, and any flowers. I'll analyze the botanical features and provide the plant name with detailed care information."
+        if (value.length === 0) {
+            this.showSuggestions();
+        } else {
+            this.hideSuggestions();
+        }
+    }
     
-    # Care and growing questions
-    elif any(word in message_lower for word in ['care', 'grow', 'growing', 'raise', 'maintain', 'keep']):
-        if any(plant in message_lower for plant in ['succulent', 'cactus']):
-            return "Succulents need bright light, well-draining soil, and infrequent watering. Water only when soil is completely dry (every 1-2 weeks). Overwatering kills them!"
-        elif 'orchid' in message_lower:
-            return "Orchids need bright indirect light, orchid bark (not soil), weekly soaking, and good drainage. They're air plants in nature!"
-        elif 'fern' in message_lower:
-            return "Ferns love humidity (50-80%), consistent moisture, and indirect light. Mist regularly and avoid direct sun."
-        else:
-            return "Plant care basics: bright indirect light, water when top soil feels dry, ensure drainage, feed monthly in growing season. What specific plant needs care advice?"
+    showSuggestions() {
+        if (this.inputSuggestions && this.textInput.value.trim().length === 0) {
+            this.inputSuggestions.classList.add('show');
+        }
+    }
     
-    # Watering questions
-    elif any(word in message_lower for word in ['water', 'watering', 'drink', 'thirsty', 'dry']):
-        return "Water most houseplants when top 1-2 inches of soil feel dry. Water thoroughly until it drains, then empty saucer. Frequency: every 1-2 weeks for most plants, less for succulents, more for ferns."
+    hideSuggestions() {
+        if (this.inputSuggestions) {
+            this.inputSuggestions.classList.remove('show');
+        }
+    }
     
-    # Light questions
-    elif any(word in message_lower for word in ['light', 'sun', 'bright', 'dark', 'shade', 'window']):
-        return "Most houseplants prefer bright, indirect light near windows. Too little light: leggy growth, pale leaves. Too much: scorched or bleached leaves. Adjust placement accordingly."
-    
-    # Toxicity and safety questions
-    elif any(word in message_lower for word in ['harmful', 'toxic', 'poisonous', 'dangerous', 'safe', 'eat', 'edible', 'poison', 'toxicity']):
-        return "Many common houseplants can be toxic to humans and pets if ingested. Plants like pothos, philodendron, and peace lilies contain calcium oxalate crystals that cause irritation. Always keep plants away from children and pets, and upload a photo for specific toxicity information about your plant."
-    
-    # Problem/health questions  
-    elif any(word in message_lower for word in ['dying', 'dead', 'yellow', 'brown', 'sick', 'problem', 'wrong', 'help']):
-        return "Yellow leaves usually mean overwatering. Brown tips suggest low humidity. Wilting indicates watering issues or root problems. Check soil moisture and examine roots. What specific symptoms do you see?"
-    
-    # Fertilizer questions
-    elif any(word in message_lower for word in ['fertilizer', 'fertilize', 'feed', 'food', 'nutrients', 'hungry']):
-        return "Feed houseplants monthly in spring/summer with diluted liquid fertilizer (half strength). Reduce in fall/winter. Yellow leaves may indicate nitrogen deficiency."
-    
-    # Propagation questions
-    elif any(word in message_lower for word in ['propagate', 'cutting', 'clone', 'multiply', 'babies', 'offspring']):
-        return "Most houseplants propagate via stem cuttings: cut below a node, remove lower leaves, place in water or rooting medium. Succulents use leaf cuttings. What plant are you propagating?"
-    
-    # General plant topics
-    elif any(word in message_lower for word in ['plant', 'flower', 'leaf', 'root', 'soil', 'pot', 'garden']):
-        return "I can help with any plant topic! Ask about care, identification, problems, propagation, or general botanical questions. What specific plant information do you need?"
-    
-    # Size and appearance questions
-    elif any(word in message_lower for word in ['big', 'small', 'large', 'size', 'tall', 'short', 'height', 'wide']):
-        return "Plant size depends on species, growing conditions, and care. Factors like light, water, nutrients, and pot size affect growth. Some plants can be kept smaller through pruning or root restriction. What size question do you have?"
-    
-    # Color and appearance
-    elif any(word in message_lower for word in ['color', 'green', 'red', 'purple', 'white', 'beautiful', 'pretty', 'appearance']):
-        return "Plant colors come from pigments like chlorophyll (green), anthocyanins (red/purple), and carotenoids (yellow/orange). Color changes can indicate health, light conditions, or natural variation. What color aspect interests you?"
-    
-    # Greetings and general queries
-    elif any(word in message_lower for word in ['hi', 'hello', 'hey', 'thanks', 'thank']) and len(message_lower.split()) <= 3:
-        return "Hello! I'm Lumon, your botanical expert. I can help identify plants, provide care advice, troubleshoot problems, and answer gardening questions. What can I help you with?"
-    
-    # Season and timing questions
-    elif any(word in message_lower for word in ['when', 'season', 'spring', 'summer', 'fall', 'winter', 'time', 'month']):
-        return "Plant care varies by season: Spring - active growth, increase watering/feeding. Summer - monitor for heat stress and pests. Fall - reduce feeding, prepare for dormancy. Winter - minimal water, no fertilizer. What seasonal question do you have?"
-    
-    # Soil and potting questions
-    elif any(word in message_lower for word in ['soil', 'dirt', 'potting', 'repot', 'transplant', 'pot']):
-        return "Good potting soil drains well but retains some moisture. Most houseplants need a mix of peat, perlite, and bark. Repot when roots circle the pot or soil stays soggy. What soil question can I help with?"
-    
-    # Temperature and environment
-    elif any(word in message_lower for word in ['temperature', 'hot', 'cold', 'humidity', 'air', 'environment']):
-        return "Most houseplants prefer 65-75°F and 40-60% humidity. Cold drafts and heat vents can stress plants. Increase humidity with pebble trays or humidifiers. What environmental concern do you have?"
-    
-    # Pest and disease questions
-    elif any(word in message_lower for word in ['pest', 'bug', 'insect', 'aphid', 'spider', 'mite', 'scale', 'fungus']):
-        return "Common pests include aphids, spider mites, and scale insects. Look for sticky honeydew, webbing, or small moving dots. Treat with insecticidal soap or neem oil. Fungal issues need better air circulation and less moisture."
-    
-    # Default for unmatched queries
-    else:
-        return "I can help with plant care, identification, problems, and botanical questions. Try asking about watering, light, toxicity, pests, or upload a photo for plant identification. What plant topic interests you?"
-
-def get_plant_care_advice(plant_name):
-    """Generate specific care tips for identified plants"""
-    plant_lower = plant_name.lower()
-    
-    if any(word in plant_lower for word in ['succulent', 'cactus', 'aloe', 'jade']):
-        return ["Water only when soil is completely dry", "Provide bright, indirect light", "Use well-draining soil", "Avoid overwatering - less is more"]
-    elif any(word in plant_lower for word in ['orchid']):
-        return ["Water weekly by soaking method", "Provide bright, indirect light", "Use orchid bark mix", "Maintain 40-70% humidity"]
-    elif any(word in plant_lower for word in ['fern', 'boston fern']):
-        return ["Keep soil consistently moist", "Provide high humidity", "Avoid direct sunlight", "Mist regularly but avoid waterlogged soil"]
-    elif any(word in plant_lower for word in ['peace lily', 'lily']):
-        return ["Water when soil surface is dry", "Tolerates low to bright light", "Flowers indicate good care", "Drooping leaves signal watering time"]
-    else:
-        return ["Provide appropriate light for species", "Water when topsoil feels dry", "Ensure good drainage", "Feed during growing season"]
-
-# Authentication Routes
-
-@app.route('/api/register', methods=['POST'])
-def register():
-    """User registration endpoint with Supabase email confirmation"""
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        username = data.get('username')
-
-        if not all([email, password, username]):
-            return jsonify({"success": False, "error": "Missing required fields"}), 400
-
-        if not SUPABASE_AVAILABLE:
-            return jsonify({"success": False, "error": "Database not available"}), 503
-
-        # Set redirect_to for confirmation link (must match your Flask route)
-        confirm_url = url_for('confirm_email', _external=True)
-        result = db_service.create_user(email, password, username, redirect_to=confirm_url)
-
-        if result["success"]:
-            return jsonify({
-                "success": True,
-                "message": "Registration successful! Please check your email and confirm your account before logging in."
-            }), 201
-        else:
-            # Return specific error for username or email already exists
-            error_msg = result.get("error", "Registration failed.")
-            return jsonify({"success": False, "error": error_msg}), 400
-
-    except Exception as e:
-        logging.error(f"Registration error: {e}")
-        return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    """User login endpoint with Supabase email confirmation check"""
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        if not all([email, password]):
-            return jsonify({"success": False, "error": "Missing email or password"}), 400
-        if not SUPABASE_AVAILABLE:
-            return jsonify({"success": False, "error": "Database not available"}), 503
-        result = db_service.authenticate_user(email, password)
-        if result["success"]:
-            # Check if user is confirmed
-            if result.get("user_confirmed") is False:
-                return jsonify({"success": False, "error": "Please confirm your email before logging in."}), 401
-            session.clear()
-            session['user_id'] = result["user_id"]
-            session['authenticated'] = True
-            session.permanent = True  # Make session cookie persistent
-            return jsonify({"success": True, "message": "Login successful"}), 200
-        else:
-            error_msg = result.get("error", "Invalid email or password.")
-            return jsonify({"success": False, "error": error_msg}), 401
-    except Exception as e:
-        logging.error(f"Login error: {e}")
-        return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.route('/api/logout', methods=['POST'])
-def logout():
-    """User logout endpoint"""
-    try:
-        session.clear()
-        return jsonify({"success": True, "message": "Logged out successfully"}), 200
-    except Exception as e:
-        logging.error(f"Logout error: {e}")
-        return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.route('/api/oauth/session', methods=['POST'])
-def oauth_session():
-    if not SUPABASE_AVAILABLE:
-        return jsonify({"success": False, "error": "Database not available"}), 503
-    try:
-        data = request.get_json()
-        access_token = data.get('access_token')
-        if not access_token:
-            return jsonify({"success": False, "error": "Missing access token"}), 400
-        from supabase import create_client
-        supabase_url = os.environ.get('SUPABASE_URL')
-        supabase_anon = os.environ.get('SUPABASE_ANON_KEY')
-        supabase = create_client(supabase_url, supabase_anon)
-        user_response = supabase.auth.get_user(access_token)
-        if hasattr(user_response, 'user') and user_response.user:
-            session.clear()
-            session['user_id'] = user_response.user.id
-            session['authenticated'] = True
-            session.permanent = True
-            return jsonify({"success": True, "message": "OAuth login successful"}), 200
-        else:
-            return jsonify({"success": False, "error": "Invalid or expired token"}), 401
-    except Exception as e:
-        logging.error(f"OAuth session error: {e}")
-        return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.route('/api/user/profile', methods=['GET'])
-def get_profile():
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({"success": False, "error": "Not authenticated"}), 401
-        if not SUPABASE_AVAILABLE:
-            return jsonify({"success": False, "error": "Database not available"}), 503
-        result = db_service.get_user_profile(user_id)
-        # PATCH: Ensure profile_pic_url is included
-        if result.get('success') and 'profile' in result:
-            if 'profile_pic_url' not in result['profile']:
-                result['profile']['profile_pic_url'] = None
-        return jsonify(result), 200 if result["success"] else 404
-    except Exception as e:
-        logging.error(f"Profile error: {e}")
-        return jsonify({"success": False, "error": "Internal server error"}), 500
-
-@app.route('/api/auth/status', methods=['GET'])
-def auth_status():
-    """Check authentication status"""
-    try:
-        user_id = session.get('user_id')
-        authenticated = session.get('authenticated', False)
+    toggleAttachOptions() {
+        if (!this.attachOptions) return;
         
-        if authenticated and user_id and SUPABASE_AVAILABLE:
-            profile_result = db_service.get_user_profile(user_id)
-            if profile_result["success"]:
-                return jsonify({
-                    "authenticated": True,
-                    "user_id": user_id,
-                    "profile": profile_result["profile"]
-                }), 200
+        const isVisible = this.attachOptions.style.display === 'block';
         
-        return jsonify({"authenticated": False}), 200
+        if (isVisible) {
+            this.hideAttachOptions();
+        } else {
+            this.showAttachOptions();
+        }
+    }
+    
+    showAttachOptions() {
+        if (!this.attachOptions) return;
+        this.attachOptions.style.display = 'block';
+        this.attachBtn.classList.add('active');
         
-    except Exception as e:
-        logging.error(f"Auth status error: {e}")
-        return jsonify({"authenticated": False, "error": "Internal server error"}), 500
-
-@app.route('/auth/google')
-def auth_google():
-    # Construct the Supabase Google OAuth URL
-    redirect_url = url_for('auth_google_callback', _external=True)
-    supabase_url = os.environ.get('SUPABASE_URL')
-    # This URL must match the one registered in Supabase and Google Cloud Console
-    return redirect(
-        f'{supabase_url}/auth/v1/authorize?provider=google&redirect_to={redirect_url}'
-    )
-
-@app.route('/auth/google/callback')
-def auth_google_callback():
-    # After Google login, Supabase will redirect here with access_token in fragment (not query)
-    # Frontend JS will extract the token and call /api/oauth/session
-    return render_template('google_oauth_callback.html')
-
-@app.route('/')
-def landing():
-    # Always show landing page, regardless of authentication status
-    return render_template('landing.html')
-
-@app.route('/settings')
-def settings():
-    return render_template('settings.html')
-
-@app.route('/history')
-def history():
-    return render_template('history.html')
-
-@app.route('/page0')
-def page0():
-    return render_template('page0.html')
-
-@app.route('/page1')
-def page1():
-    return render_template('page1.html')
-
-@app.route('/page2')
-def page2():
-    return render_template('page2.html')
-@app.route('/health')
-def health():
-    return "OK", 200
-
-@app.route('/api/user/update_username', methods=['POST'])
-def update_username():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
-    data = request.get_json()
-    username = data.get('username')
-    if not username:
-        return jsonify({'success': False, 'error': 'Missing username'}), 400
-    result = db_service.update_username(session['user_id'], username)
-    if result.get('success'):
-        return jsonify({'success': True}), 200
-    else:
-        return jsonify({'success': False, 'error': result.get('error', 'Failed to update username')}), 400
-
-@app.route('/api/user/update_password', methods=['POST'])
-def update_password():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
-    data = request.get_json()
-    old_password = data.get('old_password')
-    new_password = data.get('new_password')
-    if not old_password or not new_password:
-        return jsonify({'success': False, 'error': 'Missing password fields'}), 400
-    result = db_service.update_password(session['user_id'], old_password, new_password)
-    if result.get('success'):
-        return jsonify({'success': True}), 200
-    else:
-        return jsonify({'success': False, 'error': result.get('error', 'Failed to update password')}), 400
-
-@app.route('/api/user/update_country', methods=['POST'])
-def update_country():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
-    data = request.get_json()
-    country = data.get('country')
-    if not country:
-        return jsonify({'success': False, 'error': 'Missing country'}), 400
-    result = db_service.update_country(session['user_id'], country)
-    if result.get('success'):
-        return jsonify({'success': True}), 200
-    else:
-        return jsonify({'success': False, 'error': result.get('error', 'Failed to update country')}), 400
-
-@app.route('/api/user/upload_profile_pic', methods=['POST'])
-def upload_profile_pic():
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
-    if 'profile_pic' not in request.files:
-        return jsonify({'success': False, 'error': 'No file uploaded'}), 400
-    file = request.files['profile_pic']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No selected file'}), 400
-    uploads_dir = os.path.join(os.getcwd(), 'uploads')
-    os.makedirs(uploads_dir, exist_ok=True)
-    filename = f"{session['user_id']}_profile_{file.filename}"
-    file_path = os.path.join(uploads_dir, filename)
-    file.save(file_path)
-    file_url = f"/uploads/{filename}"
-    result = db_service.update_profile_pic(session['user_id'], file_url)
-    # PATCH: Ensure profile_pic_url is updated
-    if result.get('success'):
-        return jsonify({'success': True, 'file_url': file_url}), 200
-    else:
-        return jsonify({'success': False, 'error': result.get('error', 'Failed to update profile picture')}), 400
-
-# --- NEW: Chat message persistence ---
-@app.route('/api/user/history', methods=['GET'])
-def get_user_history():
-    """Fetch chat history for the logged-in user from Supabase."""
-    if 'user_id' not in session:
-        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
-    if not SUPABASE_AVAILABLE:
-        return jsonify({'success': False, 'error': 'Database not available'}), 503
-    try:
-        user_id = session['user_id']
-        # Fetch chat sessions for user
-        sessions_result = db_service.get_user_chat_sessions(user_id)
-        if not sessions_result['success']:
-            return jsonify({'success': False, 'error': 'Could not fetch chat sessions'}), 400
-        chat_sessions_list = sessions_result['sessions']
-        # For each session, fetch messages
-        all_history = []
-        for sess in chat_sessions_list:
-            session_id = sess['id']
-            messages_result = db_service.get_chat_messages(session_id, user_id)
-            if messages_result['success']:
-                all_history.append({
-                    'session_id': session_id,
-                    'created_at': sess['created_at'],
-                    'messages': messages_result['messages']
+        // Auto-hide after image selection or 5 seconds
+        setTimeout(() => {
+            this.hideAttachOptions();
+        }, 5000);
+    }
+    
+    hideAttachOptions() {
+        if (!this.attachOptions) return;
+        this.attachOptions.style.display = 'none';
+        this.attachBtn.classList.remove('active');
+    }
+    
+    async sendTextMessage() {
+        const message = this.textInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        this.addUserTextMessage(message);
+        
+        // Clear input
+        this.textInput.value = '';
+        this.handleTextInput();
+        this.hideSuggestions();
+        
+        // Show typing indicator
+        const typingId = this.addBotTyping();
+        
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    session_id: this.sessionId
                 })
-        return jsonify({'success': True, 'history': all_history}), 200
-    except Exception as e:
-        logging.error(f"Error fetching user history: {e}")
-        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+            });
+            
+            const data = await response.json();
+            
+            // Remove typing indicator
+            this.removeBotTyping(typingId);
+            
+            if (response.ok) {
+                // Patch: Use typing animation if typing flag is set
+                if (data.typing) {
+                    // Insert bot message container
+                    const messageId = `bot-msg-${++this.messageCounter}`;
+                    const time = new Date().toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit' 
+                    });
+                    const messageHtml = `
+                        <div class="chat-message bot-message" id="${messageId}">
+                            <div class="message-avatar">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-bubble">
+                                    <p class="bot-typing-text"></p>
+                                </div>
+                                <div class="message-time">${time}</div>
+                            </div>
+                        </div>
+                    `;
+                    this.chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+                    this.scrollToBottom();
+                    const msgDiv = document.querySelector(`#${messageId} .bot-typing-text`);
+                    showBotMessageWithTyping(data.response, msgDiv, () => {
+                        // Optionally do something after typing
+                    });
+                } else {
+                    this.addBotMessage(data.response);
+                }
+            } else {
+                this.addBotMessage('Sorry, I encountered an error. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.removeBotTyping(typingId);
+            this.addBotMessage('Sorry, I had trouble processing your message. Please check your connection and try again.');
+        }
+    }
+    
+    addUserTextMessage(text) {
+        if (!this.chatContainer) return;
+        
+        const messageId = `user-msg-${++this.messageCounter}`;
+        const time = new Date().toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit' 
+        });
+        
+        const messageHtml = `
+            <div class="chat-message user-message" id="${messageId}">
+                <div class="message-content">
+                    <div class="message-bubble">
+                        <p>${text}</p>
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+                <div class="message-avatar">
+                    <div class="avatar-glow">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        this.scrollToBottom();
+    }
+    
+    addBotTyping() {
+        if (!this.chatContainer) return null;
+        
+        const typingId = `typing-${Date.now()}`;
+        const messageHtml = `
+            <div class="chat-message bot-message" id="${typingId}">
+                <div class="message-avatar">
+                    <div class="avatar-glow">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                </div>
+                <div class="message-content">
+                    <div class="message-bubble">
+                        <div class="typing-animation">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        this.chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        this.scrollToBottom();
+        return typingId;
+    }
+    
+    removeBotTyping(typingId) {
+        if (typingId) {
+            const typingElement = document.getElementById(typingId);
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+    }
+    
+    // 3D Background initialization
+    init3DBackground() {
+        // Wait for Three.js to load if not immediately available
+        if (!window.THREE) {
+            setTimeout(() => {
+                if (window.THREE) {
+                    this.setupThreeJSScene();
+                } else {
+                    console.log('Three.js not available, using CSS animations only');
+                }
+            }, 1000);
+            return;
+        }
+        this.setupThreeJSScene();
+    }
+    
+    setupThreeJSScene() {
+        try {
+            const canvas = document.getElementById('bg-canvas');
+            if (!canvas) {
+                console.log('Canvas element not found');
+                return;
+            }
 
-# --- NEW: Save chat message to Supabase ---
-def save_message_to_db(session_id, user_id, role, message):
-    if not SUPABASE_AVAILABLE:
-        return False
-    try:
-        db_service.save_chat_message(session_id, user_id, role, message)
-        return True
-    except Exception as e:
-        logging.error(f"Error saving chat message: {e}")
-        return False
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas, 
+                alpha: true,
+                antialias: true 
+            });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setClearColor(0x000000, 0);
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+            this.createFloating3DElements();
+            this.camera.position.z = 5;
+            this.animate3D();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => this.onWindowResize());
+            
+        } catch (error) {
+            console.log('3D background setup failed, using fallback animations');
+            this.initFallbackAnimations();
+        }
+    }
+    
+    onWindowResize() {
+        if (!this.camera || !this.renderer) return;
+        
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    onWindowResize() {
+        if (!this.camera || !this.renderer) return;
+        
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    createFloating3DElements() {
+        if (!this.scene) return;
+        
+        this.particles3D = [];
+        
+        // Create leaf-like geometries with more detail
+        const leafGeometry = new THREE.PlaneGeometry(0.4, 0.6);
+        const leafMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x10b981, 
+            transparent: true,
+            opacity: 0.7,
+            side: THREE.DoubleSide
+        });
+
+        // Create stem/branch geometries
+        const stemGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8);
+        const stemMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x059669, 
+            transparent: true,
+            opacity: 0.8
+        });
+
+        // Create pollen-like spheres
+        const pollenGeometry = new THREE.SphereGeometry(0.08, 12, 8);
+        const pollenMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x34d399, 
+            transparent: true,
+            opacity: 0.9
+        });
+
+        // Create flower-like geometries
+        const flowerGeometry = new THREE.ConeGeometry(0.15, 0.3, 6);
+        const flowerMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x50c878, 
+            transparent: true,
+            opacity: 0.8
+        });
+
+        // Add multiple floating botanical elements
+        for (let i = 0; i < 25; i++) {
+            let mesh, geometry, material;
+            
+            const elementType = i % 4;
+            switch (elementType) {
+                case 0: // Leaves
+                    mesh = new THREE.Mesh(leafGeometry, leafMaterial);
+                    break;
+                case 1: // Stems
+                    mesh = new THREE.Mesh(stemGeometry, stemMaterial);
+                    break;
+                case 2: // Pollen
+                    mesh = new THREE.Mesh(pollenGeometry, pollenMaterial);
+                    break;
+                case 3: // Flowers
+                    mesh = new THREE.Mesh(flowerGeometry, flowerMaterial);
+                    break;
+            }
+            
+            // Random positioning across the screen
+            mesh.position.x = (Math.random() - 0.5) * 12;
+            mesh.position.y = (Math.random() - 0.5) * 12;
+            mesh.position.z = (Math.random() - 0.5) * 6;
+            
+            // Random initial rotation
+            mesh.rotation.x = Math.random() * Math.PI * 2;
+            mesh.rotation.y = Math.random() * Math.PI * 2;
+            mesh.rotation.z = Math.random() * Math.PI * 2;
+            
+            // Animation properties
+            mesh.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02
+            };
+            
+            // Floating motion parameters
+            mesh.floatSpeed = 0.0008 + Math.random() * 0.0012;
+            mesh.floatAmplitude = 0.3 + Math.random() * 0.8;
+            mesh.timeOffset = Math.random() * Math.PI * 2;
+            mesh.driftSpeed = (Math.random() - 0.5) * 0.003;
+            
+            this.particles3D.push(mesh);
+            this.scene.add(mesh);
+        }
+    }
+
+    animate3D() {
+        if (!this.renderer || !this.scene || !this.camera) return;
+        
+        requestAnimationFrame(() => this.animate3D());
+        
+        const time = Date.now() * 0.001;
+        
+        if (this.particles3D && this.particles3D.length > 0) {
+            this.particles3D.forEach((particle, index) => {
+                // Continuous rotation
+                particle.rotation.x += particle.rotationSpeed.x;
+                particle.rotation.y += particle.rotationSpeed.y;
+                particle.rotation.z += particle.rotationSpeed.z;
+                
+                // Complex floating motion
+                const floatY = Math.sin(time * particle.floatSpeed + particle.timeOffset) * particle.floatAmplitude * 0.02;
+                const floatX = Math.cos(time * particle.floatSpeed * 0.7 + particle.timeOffset) * 0.01;
+                const floatZ = Math.sin(time * particle.floatSpeed * 0.5 + particle.timeOffset) * 0.008;
+                
+                particle.position.y += floatY;
+                particle.position.x += floatX;
+                particle.position.z += floatZ;
+                
+                // Gentle drift
+                particle.position.x += particle.driftSpeed;
+                
+                // Reset particles that drift too far
+                if (particle.position.x > 8) particle.position.x = -8;
+                if (particle.position.x < -8) particle.position.x = 8;
+                if (particle.position.y > 8) particle.position.y = -8;
+                if (particle.position.y < -8) particle.position.y = 8;
+                
+                // Subtle scaling animation for organic feel
+                const scaleVariation = 1 + Math.sin(time * 0.5 + index) * 0.1;
+                particle.scale.setScalar(scaleVariation);
+            });
+        }
+        
+        // Gentle camera movement
+        this.camera.position.x = Math.sin(time * 0.1) * 0.5;
+        this.camera.position.y = Math.cos(time * 0.08) * 0.3;
+        this.camera.lookAt(0, 0, 0);
+        
+        this.renderer.render(this.scene, this.camera);
+    }
+    
+    initAnimations() {
+        if (!window.gsap) return;
+        
+        // Enhanced 2D floating animations
+        gsap.to('.leaf-particle', {
+            y: '+=20px',
+            rotation: '+=10deg',
+            duration: 4,
+            ease: 'power2.inOut',
+            stagger: 0.5,
+            repeat: -1,
+            yoyo: true
+        });
+
+        gsap.to('.pollen-particle', {
+            y: '+=15px',
+            x: '+=10px',
+            scale: 1.2,
+            duration: 3,
+            ease: 'power2.inOut',
+            stagger: 0.3,
+            repeat: -1,
+            yoyo: true
+        });
+        
+        // Avatar glow animation
+        gsap.to('.avatar-glow', {
+            boxShadow: '0 0 30px rgba(16, 185, 129, 0.6), 0 0 50px rgba(16, 185, 129, 0.4)',
+            duration: 2,
+            ease: 'power2.inOut',
+            repeat: -1,
+            yoyo: true
+        });
+    }
+    
+    initFallbackAnimations() {
+        // Enhanced CSS-only animations when 3D is not available
+        if (!window.gsap) return;
+        
+        // Create additional floating elements
+        const container = document.querySelector('.floating-3d-elements');
+        if (container) {
+            for (let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'css-particle';
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${4 + Math.random() * 8}px;
+                    height: ${4 + Math.random() * 8}px;
+                    background: radial-gradient(circle, rgba(16, 185, 129, 0.8), rgba(52, 211, 153, 0.4));
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                `;
+                container.appendChild(particle);
+                
+                gsap.to(particle, {
+                    y: '+=30px',
+                    x: '+=20px',
+                    scale: 1.5,
+                    opacity: 0.3,
+                    duration: 6 + Math.random() * 4,
+                    ease: 'power2.inOut',
+                    repeat: -1,
+                    yoyo: true,
+                    delay: Math.random() * 2
+                });
+            }
+        }
+    }
+    
+    // Utility method for showing notifications
+    showNotification(message, type = 'info') {
+        console.log(`${type}: ${message}`);
+    }
+
+    // 3D Background initialization
+    init3DBackground() {
+        if (!window.THREE) return; // Fallback if Three.js doesn't load
+        
+        try {
+            // Scene setup
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.renderer = new THREE.WebGLRenderer({ canvas: this.bgCanvas, alpha: true });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setClearColor(0x000000, 0);
+
+            // Create floating geometric shapes
+            this.createFloatingGeometry();
+            
+            // Position camera
+            this.camera.position.z = 5;
+            
+            // Start animation loop
+            this.animate3D();
+        } catch (error) {
+            console.log('3D background initialization failed, continuing without 3D effects');
+        }
+    }
+
+    createFloatingGeometry() {
+        const geometries = [
+            new THREE.TetrahedronGeometry(0.5),
+            new THREE.OctahedronGeometry(0.3),
+            new THREE.IcosahedronGeometry(0.4)
+        ];
+        
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x10b981, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+
+        for (let i = 0; i < 15; i++) {
+            const geometry = geometries[Math.floor(Math.random() * geometries.length)];
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            // Random positioning
+            mesh.position.x = (Math.random() - 0.5) * 20;
+            mesh.position.y = (Math.random() - 0.5) * 20;
+            mesh.position.z = (Math.random() - 0.5) * 10;
+            
+            // Random rotation speeds
+            mesh.rotationSpeed = {
+                x: (Math.random() - 0.5) * 0.02,
+                y: (Math.random() - 0.5) * 0.02,
+                z: (Math.random() - 0.5) * 0.02
+            };
+            
+            this.particles.push(mesh);
+            this.scene.add(mesh);
+        }
+    }
+
+    animate3D() {
+        if (!this.renderer) return;
+        
+        requestAnimationFrame(() => this.animate3D());
+        
+        // Rotate particles
+        this.particles.forEach(particle => {
+            particle.rotation.x += particle.rotationSpeed.x;
+            particle.rotation.y += particle.rotationSpeed.y;
+            particle.rotation.z += particle.rotationSpeed.z;
+            
+            // Gentle floating motion
+            particle.position.y += Math.sin(Date.now() * 0.001 + particle.position.x) * 0.001;
+        });
+        
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    onWindowResize() {
+        if (!this.camera || !this.renderer) return;
+        
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Animation utilities
+    initAnimations() {
+        // Stagger animation for floating particles
+        gsap.to('.particle', {
+            y: '20px',
+            duration: 2,
+            ease: 'power2.inOut',
+            stagger: 0.2,
+            repeat: -1,
+            yoyo: true
+        });
+
+        // Logo 3D rotation enhancement
+        gsap.to('.logo-3d', {
+            rotationY: 360,
+            duration: 10,
+            ease: 'none',
+            repeat: -1
+        });
+    }
+
+    setupScrollAnimations() {
+        // Smooth reveal animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    gsap.fromTo(entry.target,
+                        { opacity: 0, y: 50 },
+                        { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }
+                    );
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for scroll animations
+        document.querySelectorAll('.glass-card').forEach(card => {
+            observer.observe(card);
+        });
+    }
+
+    // Utility method to show toast notifications
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            <span>${message}</span>
+        `;
+        
+        // Add toast styles
+        Object.assign(toast.style, {
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            color: 'white',
+            zIndex: '10000',
+            transform: 'translateX(100%)',
+            opacity: '0'
+        });
+        
+        document.body.appendChild(toast);
+        
+        // Animate in
+        gsap.to(toast, {
+            x: 0,
+            opacity: 1,
+            duration: 0.5,
+            ease: 'back.out(1.7)'
+        });
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            gsap.to(toast, {
+                x: '100%',
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }
+            });
+        }, 3000);
+    }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.LumonApp = new LumonApp();
+    
+    // Smooth page load animation
+    gsap.fromTo('.mobile-app', 
+        { opacity: 0, scale: 0.95 },
+        { opacity: 1, scale: 1, duration: 0.6, ease: 'power2.out' }
+    );
+    
+    // Animate welcome message
+    setTimeout(() => {
+        gsap.fromTo('#welcome-message',
+            { opacity: 0, y: 30 },
+            { opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.7)' }
+        );
+    }, 300);
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Escape to close camera or settings
+        if (e.key === 'Escape') {
+            if (window.LumonApp.cameraInterface.style.display === 'flex') {
+                window.LumonApp.closeCamera();
+            }
+            if (window.LumonApp.settingsModal.style.display === 'flex') {
+                window.LumonApp.closeSettings();
+            }
+        }
+        
+        // Space or Enter to open camera
+        if ((e.key === ' ' || e.key === 'Enter') && e.target === document.body) {
+            e.preventDefault();
+            window.LumonApp.openCamera();
+        }
+    });
+    
+    // Prevent zoom on double tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+    
+    // Handle back button for camera
+    window.addEventListener('popstate', () => {
+        if (window.LumonApp.cameraInterface.style.display === 'flex') {
+            window.LumonApp.closeCamera();
+        }
+    });
+});
+
+// Global error handler
+window.addEventListener('error', (e) => {
+    console.error('Global error:', e.error);
+    if (window.LumonApp) {
+        window.LumonApp.addBotMessage('Sorry, something went wrong. Please try again.');
+    }
+});
+
+// Handle online/offline status
+window.addEventListener('online', () => {
+    if (window.LumonApp) {
+        window.LumonApp.showNotification('Connection restored', 'success');
+    }
+});
+
+window.addEventListener('offline', () => {
+    if (window.LumonApp) {
+        window.LumonApp.addBotMessage('You appear to be offline. Please check your connection.');
+    }
+});
+
+// Prevent zoom on inputs
+document.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+});
+
+// Add visual feedback for touch interactions
+document.addEventListener('touchstart', (e) => {
+    const target = e.target.closest('button');
+    if (target) {
+        target.style.transform = 'scale(0.95)';
+    }
+});
+
+document.addEventListener('touchend', (e) => {
+    const target = e.target.closest('button');
+    if (target) {
+        target.style.transform = '';
+    }
+});
+
+// Patch: Typing animation for bot responses
+function showBotMessageWithTyping(msg, container, callback) {
+    let index = 0;
+    let rawText = '';
+    function type() {
+        if (index < msg.length) {
+            rawText += msg.charAt(index);
+            container.textContent = rawText;
+            index++;
+            setTimeout(type, 15);
+        } else if (callback) {
+            callback();
+        }
+    }
+    type();
+}
