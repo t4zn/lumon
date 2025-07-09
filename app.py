@@ -1410,7 +1410,7 @@ def generate_contextual_botanical_response(message, context=""):
     
     # Handle empty or very short messages
     if len(message_lower) < 2:
-        return "I'm Lumon, your botanical expert! Ask me about plant care, identification, or any gardening questions."
+        return "I'm Lumon, your botanical expert! Ask me about plant care or any gardening questions."
     
     # Question word analysis for better matching
     question_words = ['what', 'where', 'when', 'why', 'how', 'which', 'who']
@@ -1473,7 +1473,7 @@ def generate_contextual_botanical_response(message, context=""):
     
     # Greetings and general queries
     elif any(word in message_lower for word in ['hi', 'hello', 'hey', 'thanks', 'thank']) and len(message_lower.split()) <= 3:
-        return "Hello! I'm Lumon, your botanical expert. I can help identify plants, provide care advice, troubleshoot problems, and answer gardening questions. What can I help you with?"
+        return "Hello! I'm Lumon, your botanical expert. I can help provide care advice, troubleshoot problems, and answer gardening questions. What can I help you with?"
     
     # Season and timing questions
     elif any(word in message_lower for word in ['when', 'season', 'spring', 'summer', 'fall', 'winter', 'time', 'month']):
