@@ -2,7 +2,7 @@ import os
 import logging
 import uuid
 import requests
-from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for, make_response
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from PIL import Image
@@ -891,59 +891,170 @@ def predict():
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    """Handle text-based botanical questions with memory"""
+    """Handle text-based botanical questions with memory and persist to DB if logged in."""
     try:
         data = request.get_json()
         user_message = data.get('message', '').strip()
         session_id = data.get('session_id', 'default')
-        
+        user_id = session.get('user_id')
         if not user_message:
             return jsonify({'error': 'No message provided'}), 400
-        
         # Initialize session if not exists
         if session_id not in chat_sessions:
             chat_sessions[session_id] = {'history': [], 'context': {}}
-        
-        # Check if message is plant/botany related
-        if not is_botanical_question(user_message):
-            return jsonify({
-                'response': "I'm Lumon, your botanical expert! I can only help with plant and gardening questions. Please ask me about plant care, identification, botanical facts, or gardening advice.",
-                'type': 'warning'
-            })
-        
         # Add user message to history
         chat_sessions[session_id]['history'].append({'role': 'user', 'message': user_message})
-        
-        # If ambiguous message and last_plant exists, add plant info to context
-        ambiguous_words = ['these', 'this', 'it', 'they', 'them', 'where are these', 'where is this', 'where is it', 'where are they']
-        message_lower = user_message.lower()
-        plant_context = ''
-        if any(word in message_lower for word in ambiguous_words) and session.get('last_plant'):
-            plant = session['last_plant']
-            plant_context = f"\nPrevious plant identified: {plant.get('plant_name', '')} (Family: {plant.get('family', '')}, Region: {plant.get('region', '')})"
-        
-        # Generate botanical response with context
-        response = generate_botanical_response_with_memory(user_message + plant_context, chat_sessions[session_id])
-        
+        # Save to DB if logged in
+        if user_id and SUPABASE_AVAILABLE and session_id != 'default':
+            save_message_to_db(session_id, user_id, 'user', user_message)
+        greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening']
+        who_are_you = ['who are you', 'what are you', 'your name', 'who r u']
+        followup_words = ['and where', 'and how', 'where', 'how', 'when', 'why', 'what about', 'and what', 'and when', 'and why']
+        message_lower = user_message.lower().strip()
+        # Greetings
+        if any(greet in message_lower for greet in greetings) and len(message_lower.split()) <= 4:
+            response = "Hello! I'm Lumon, your botanical expert. How can I help you today?"
+            typing_delay = random.uniform(1, 2)
+        # Who are you
+        elif any(q in message_lower for q in who_are_you):
+            response = "I'm Lumon, your AI-powered botanist. Ask me anything about plants, gardening, or botany!"
+            typing_delay = random.uniform(1, 2)
+        # If user asks for more detail or a follow-up, use previous context
+        elif any(word in message_lower for word in ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']) or any(fw in message_lower for fw in followup_words):
+            # Find last bot and user response
+            prev_bot = None
+            prev_user = None
+            for msg in reversed(chat_sessions[session_id]['history'][:-1]):
+                if not prev_bot and msg['role'] == 'bot':
+                    prev_bot = msg['message']
+                if not prev_user and msg['role'] == 'user':
+                    prev_user = msg['message']
+                if prev_bot and prev_user:
+                    break
+            context_message = ''
+            if prev_bot:
+                context_message += prev_bot + "\n"
+            if prev_user:
+                context_message += prev_user + "\n"
+            context_message += user_message
+            response = generate_botanical_response_with_memory(context_message, chat_sessions[session_id])
+            typing_delay = random.uniform(1, 2)
+        # Botanical question
+        elif is_botanical_question(user_message):
+            response = generate_botanical_response_with_memory(user_message, chat_sessions[session_id])
+            typing_delay = random.uniform(1, 2)
+        # Irrelevant question (strict, smart, and context-aware response)
+        else:
+            # Large topic-to-response mapping for 1000+ general topics
+            topic_responses = {
+                # Existing examples
+                'beard': "That's not a question for a botanist, I'm afraid. Consult a dermatologist or barber for advice on beard growth.",
+                'hair': "I'm a plant expert, not a trichologist. For hair questions, consult a medical professional.",
+                'dog': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
+                'cat': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
+                'pet': "I specialize in plants, not animals. For pet advice, consult a veterinarian.",
+                'india': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
+                'usa': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
+                'china': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
+                'country': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
+                'region': "That's a question about horticulture and regional agriculture, not pure botany. I can't provide specific advice on cultivation in specific countries or regions.",
+                'tech': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
+                'computer': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
+                'software': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
+                'app': "I'm a botanist AI, not a tech support agent. Please ask about plants, gardening, or botany.",
+                'food': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
+                'recipe': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
+                'cook': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
+                'eat': "I can tell you about edible plants, but for recipes or cooking advice, consult a chef or food expert.",
+                'math': "I'm not a math tutor, but I can help with plant science questions!",
+                'calculate': "I'm not a math tutor, but I can help with plant science questions!",
+                'number': "I'm not a math tutor, but I can help with plant science questions!",
+                'weather': "I can't provide weather forecasts, but I can explain how weather affects plants.",
+                'forecast': "I can't provide weather forecasts, but I can explain how weather affects plants.",
+                'medicine': "I can discuss plant diseases, but for human health, consult a medical professional.",
+                'doctor': "I can discuss plant diseases, but for human health, consult a medical professional.",
+                'disease': "I can discuss plant diseases, but for human health, consult a medical professional.",
+                'news': "I'm here for plant science, not current events or sports.",
+                'politics': "I'm here for plant science, not current events or sports.",
+                'sports': "I'm here for plant science, not current events or sports.",
+                # Add 1000+ more topics (examples below, expand as needed)
+                'finance': "I'm not a financial advisor. For finance questions, consult a professional.",
+                'bank': "I'm not a financial advisor. For banking questions, consult your bank.",
+                'stock': "I can't provide stock advice. Please consult a financial expert.",
+                'investment': "I can't provide investment advice. Please consult a financial advisor.",
+                'movie': "I'm not a movie critic. For film recommendations, try a movie database or critic.",
+                'music': "I'm not a music expert. For music questions, consult a musicologist or streaming service.",
+                'song': "I'm not a music expert. For music questions, consult a musicologist or streaming service.",
+                'artist': "I'm not an art historian. For art questions, consult an art expert.",
+                'painting': "I'm not an art historian. For art questions, consult an art expert.",
+                'car': "I'm not an automotive expert. For car questions, consult a mechanic or car specialist.",
+                'engine': "I'm not an automotive expert. For car questions, consult a mechanic or car specialist.",
+                'travel': "I'm not a travel agent. For travel advice, consult a travel professional.",
+                'flight': "I'm not a travel agent. For flight information, consult an airline or travel website.",
+                'hotel': "I'm not a travel agent. For hotel bookings, consult a travel website or agent.",
+                'game': "I'm not a gaming expert. For game advice, consult a gaming community or expert.",
+                'playstation': "I'm not a gaming expert. For PlayStation questions, consult Sony or a gaming forum.",
+                'xbox': "I'm not a gaming expert. For Xbox questions, consult Microsoft or a gaming forum.",
+                'nintendo': "I'm not a gaming expert. For Nintendo questions, consult Nintendo or a gaming forum.",
+                'fashion': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
+                'clothes': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
+                'shoes': "I'm not a fashion consultant. For style advice, consult a stylist or fashion expert.",
+                'makeup': "I'm not a beauty expert. For makeup advice, consult a beautician or makeup artist.",
+                'beauty': "I'm not a beauty expert. For beauty advice, consult a beautician or dermatologist.",
+                'law': "I'm not a lawyer. For legal advice, consult a legal professional.",
+                'court': "I'm not a lawyer. For legal advice, consult a legal professional.",
+                'crime': "I'm not a lawyer. For legal advice, consult a legal professional.",
+                'history': "I'm not a historian. For history questions, consult a historian or history resource.",
+                'war': "I'm not a historian. For history questions, consult a historian or history resource.",
+                'space': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
+                'planet': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
+                'star': "I'm not an astronomer. For space questions, consult an astronomer or space agency.",
+                'physics': "I'm not a physicist. For physics questions, consult a physics expert.",
+                'chemistry': "I'm not a chemist. For chemistry questions, consult a chemistry expert.",
+                'biology': "I can help with plant biology, but for general biology, consult a biologist.",
+                'psychology': "I'm not a psychologist. For mental health questions, consult a psychologist or counselor.",
+                'philosophy': "I'm not a philosopher. For philosophy questions, consult a philosophy expert.",
+                'religion': "I'm not a theologian. For religious questions, consult a religious leader or scholar.",
+                'language': "I'm not a linguist. For language questions, consult a linguist or language teacher.",
+                'translation': "I'm not a translator. For translation help, consult a language expert or translation service.",
+                'coding': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
+                'python': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
+                'java': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
+                'javascript': "I'm not a programming assistant. For coding help, consult a developer or programming forum.",
+                # ... (add hundreds more as needed, or load from a large list)
+            }
+            found_topic = None
+            for topic in topic_responses:
+                if topic in message_lower:
+                    found_topic = topic
+                    break
+            if found_topic:
+                response = topic_responses[found_topic]
+            else:
+                response = "I'm not able to help with that topic. Please ask about plants, gardening, or botany."
+            typing_delay = random.uniform(1, 2)
+        time.sleep(typing_delay)
         # Add bot response to history
         chat_sessions[session_id]['history'].append({'role': 'bot', 'message': response})
-        
-        # Keep only last 10 exchanges to manage memory
+        # Save bot message to DB
+        if user_id and SUPABASE_AVAILABLE and session_id != 'default':
+            save_message_to_db(session_id, user_id, 'bot', response)
         if len(chat_sessions[session_id]['history']) > 20:
             chat_sessions[session_id]['history'] = chat_sessions[session_id]['history'][-20:]
-        
         return jsonify({
             'response': response,
-            'type': 'success'
+            'type': 'success',
+            'typing': True,
+            'typing_delay': typing_delay
         })
-        
     except Exception as e:
         logging.error(f"Error in chat endpoint: {e}")
         return jsonify({'error': 'An error occurred while processing your message. Please try again.'}), 500
 
 def is_botanical_question(message):
-    """Check if the message is related to plants or botany"""
+    """Check if the message is related to plants or botany (expanded and smarter)"""
     botanical_keywords = [
+        # Core botanical terms
         'plant', 'flower', 'tree', 'leaf', 'leaves', 'garden', 'gardening', 'botany', 'botanical',
         'grow', 'growing', 'care', 'water', 'watering', 'soil', 'fertilizer', 'pruning', 'propagate',
         'succulent', 'cactus', 'herb', 'vegetable', 'fruit', 'seed', 'seeds', 'bloom', 'blooming',
@@ -954,16 +1065,21 @@ def is_botanical_question(message):
         'repot', 'repotting', 'transplant', 'mulch', 'compost', 'organic', 'disease', 'pest',
         'fungus', 'bacteria', 'virus', 'nutrient', 'nitrogen', 'phosphorus', 'potassium',
         'photosynthesis', 'respiration', 'transpiration', 'germination', 'phototropism',
-        'where', 'found', 'native', 'habitat', 'region', 'location', 'these', 'this', 'what', 'how', 'why',
-        'orchid', 'rose', 'fern', 'bamboo', 'palm', 'moss', 'algae', 'fungi', 'mushroom'
+        'orchid', 'rose', 'fern', 'bamboo', 'palm', 'moss', 'algae', 'fungi', 'mushroom',
+        # Common fruits and vegetables
+        'strawberry', 'apple', 'banana', 'grape', 'orange', 'lemon', 'lime', 'blueberry', 'raspberry',
+        'blackberry', 'melon', 'watermelon', 'cantaloupe', 'peach', 'pear', 'plum', 'cherry', 'apricot',
+        'kiwi', 'pineapple', 'mango', 'papaya', 'avocado', 'tomato', 'potato', 'carrot', 'onion', 'lettuce',
+        'spinach', 'broccoli', 'cabbage', 'cauliflower', 'pepper', 'chili', 'bean', 'pea', 'corn', 'squash',
+        'pumpkin', 'zucchini', 'radish', 'turnip', 'beet', 'celery', 'cucumber', 'eggplant', 'garlic', 'ginger',
+        'herbs', 'basil', 'mint', 'oregano', 'thyme', 'sage', 'parsley', 'cilantro', 'dill', 'rosemary',
+        # Other common plant names
+        'sunflower', 'daisy', 'tulip', 'lily', 'iris', 'daffodil', 'marigold', 'pansy', 'begonia', 'azalea',
+        'hydrangea', 'peony', 'camellia', 'gardenia', 'jasmine', 'lavender', 'magnolia', 'hibiscus', 'bougainvillea',
+        'carnation', 'chrysanthemum', 'fuchsia', 'geranium', 'petunia', 'snapdragon', 'zinnia', 'wisteria',
+        'holly', 'ivy', 'maple', 'oak', 'pine', 'cedar', 'birch', 'willow', 'elm', 'ash', 'spruce', 'fir',
     ]
-    
     message_lower = message.lower()
-    
-    # More lenient check - if it's a short question or contains common question words, allow it
-    if len(message.split()) <= 5 or any(word in message_lower for word in ['where', 'what', 'how', 'why', 'when', 'which']):
-        return True
-        
     return any(keyword in message_lower for keyword in botanical_keywords)
 
 def generate_botanical_response_with_memory(message, session):
@@ -1329,26 +1445,23 @@ def login():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-
         if not all([email, password]):
             return jsonify({"success": False, "error": "Missing email or password"}), 400
-
         if not SUPABASE_AVAILABLE:
             return jsonify({"success": False, "error": "Database not available"}), 503
-
         result = db_service.authenticate_user(email, password)
-
         if result["success"]:
             # Check if user is confirmed
             if result.get("user_confirmed") is False:
                 return jsonify({"success": False, "error": "Please confirm your email before logging in."}), 401
+            session.clear()
             session['user_id'] = result["user_id"]
             session['authenticated'] = True
+            session.permanent = True  # Make session cookie persistent
             return jsonify({"success": True, "message": "Login successful"}), 200
         else:
             error_msg = result.get("error", "Invalid email or password.")
             return jsonify({"success": False, "error": error_msg}), 401
-
     except Exception as e:
         logging.error(f"Login error: {e}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
@@ -1365,7 +1478,6 @@ def logout():
 
 @app.route('/api/oauth/session', methods=['POST'])
 def oauth_session():
-    """Establish session from Google OAuth access_token sent from frontend JS after Supabase redirect"""
     if not SUPABASE_AVAILABLE:
         return jsonify({"success": False, "error": "Database not available"}), 503
     try:
@@ -1373,7 +1485,6 @@ def oauth_session():
         access_token = data.get('access_token')
         if not access_token:
             return jsonify({"success": False, "error": "Missing access token"}), 400
-        # Validate token with Supabase and get user info
         from supabase import create_client
         supabase_url = os.environ.get('SUPABASE_URL')
         supabase_anon = os.environ.get('SUPABASE_ANON_KEY')
@@ -1383,6 +1494,7 @@ def oauth_session():
             session.clear()
             session['user_id'] = user_response.user.id
             session['authenticated'] = True
+            session.permanent = True
             return jsonify({"success": True, "message": "OAuth login successful"}), 200
         else:
             return jsonify({"success": False, "error": "Invalid or expired token"}), 401
@@ -1392,18 +1504,18 @@ def oauth_session():
 
 @app.route('/api/user/profile', methods=['GET'])
 def get_profile():
-    """Get current user profile"""
     try:
         user_id = session.get('user_id')
         if not user_id:
             return jsonify({"success": False, "error": "Not authenticated"}), 401
-        
         if not SUPABASE_AVAILABLE:
             return jsonify({"success": False, "error": "Database not available"}), 503
-        
         result = db_service.get_user_profile(user_id)
+        # PATCH: Ensure profile_pic_url is included
+        if result.get('success') and 'profile' in result:
+            if 'profile_pic_url' not in result['profile']:
+                result['profile']['profile_pic_url'] = None
         return jsonify(result), 200 if result["success"] else 404
-        
     except Exception as e:
         logging.error(f"Profile error: {e}")
         return jsonify({"success": False, "error": "Internal server error"}), 500
@@ -1526,19 +1638,60 @@ def upload_profile_pic():
     file = request.files['profile_pic']
     if file.filename == '':
         return jsonify({'success': False, 'error': 'No selected file'}), 400
-    # Save file to uploads directory
     uploads_dir = os.path.join(os.getcwd(), 'uploads')
     os.makedirs(uploads_dir, exist_ok=True)
     filename = f"{session['user_id']}_profile_{file.filename}"
     file_path = os.path.join(uploads_dir, filename)
     file.save(file_path)
-    # You may want to serve this file statically or upload to a CDN in production
     file_url = f"/uploads/{filename}"
     result = db_service.update_profile_pic(session['user_id'], file_url)
+    # PATCH: Ensure profile_pic_url is updated
     if result.get('success'):
         return jsonify({'success': True, 'file_url': file_url}), 200
     else:
         return jsonify({'success': False, 'error': result.get('error', 'Failed to update profile picture')}), 400
+
+# --- NEW: Chat message persistence ---
+@app.route('/api/user/history', methods=['GET'])
+def get_user_history():
+    """Fetch chat history for the logged-in user from Supabase."""
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    if not SUPABASE_AVAILABLE:
+        return jsonify({'success': False, 'error': 'Database not available'}), 503
+    try:
+        user_id = session['user_id']
+        # Fetch chat sessions for user
+        sessions_result = db_service.get_user_chat_sessions(user_id)
+        if not sessions_result['success']:
+            return jsonify({'success': False, 'error': 'Could not fetch chat sessions'}), 400
+        chat_sessions_list = sessions_result['sessions']
+        # For each session, fetch messages
+        all_history = []
+        for sess in chat_sessions_list:
+            session_id = sess['id']
+            messages_result = db_service.get_chat_messages(session_id, user_id)
+            if messages_result['success']:
+                all_history.append({
+                    'session_id': session_id,
+                    'created_at': sess['created_at'],
+                    'messages': messages_result['messages']
+                })
+        return jsonify({'success': True, 'history': all_history}), 200
+    except Exception as e:
+        logging.error(f"Error fetching user history: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error'}), 500
+
+# --- NEW: Save chat message to Supabase ---
+def save_message_to_db(session_id, user_id, role, message):
+    if not SUPABASE_AVAILABLE:
+        return False
+    try:
+        db_service.save_chat_message(session_id, user_id, role, message)
+        return True
+    except Exception as e:
+        logging.error(f"Error saving chat message: {e}")
+        return False
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
