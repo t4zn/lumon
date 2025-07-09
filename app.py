@@ -12,11 +12,11 @@ import random
 import time
 import json
 import re
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import difflib
 
 # Load environment variables first
-load_dotenv()
+#load_dotenv()
 
 # Import Supabase integration
 try:
