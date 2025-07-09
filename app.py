@@ -13,6 +13,7 @@ import time
 import json
 import re
 from dotenv import load_dotenv
+import difflib
 
 # Load environment variables first
 load_dotenv()
@@ -948,6 +949,8 @@ def chat():
             save_message_to_db(session_id, user_id, 'user', user_message)
         greetings = ['hi', 'hello', 'hey', 'greetings', 'good morning', 'good afternoon', 'good evening']
         who_are_you = ['who are you', 'what are you', 'your name', 'who r u']
+        thanks = ['thank you', 'thanks', 'thx', 'ty', 'appreciate it', 'much appreciated']
+        farewells = ['bye', 'goodbye', 'see you', 'see ya', 'later', 'farewell', 'take care']
         followup_words = ['and where', 'and how', 'where', 'how', 'when', 'why', 'what about', 'and what', 'and when', 'and why']
         message_lower = user_message.lower().strip()
         # Greetings
@@ -957,6 +960,14 @@ def chat():
         # Who are you
         elif any(q in message_lower for q in who_are_you):
             response = "I'm Lumon, your AI-powered botanist. Ask me anything about plants, gardening, or botany!"
+            typing_delay = random.uniform(1, 2)
+        # Thanks
+        elif any(t in message_lower for t in thanks):
+            response = "You're welcome! If you have more questions about plants or gardening, just ask."
+            typing_delay = random.uniform(1, 2)
+        # Farewells
+        elif any(f in message_lower for f in farewells):
+            response = "Goodbye! Happy gardening!"
             typing_delay = random.uniform(1, 2)
         # If user asks for more detail or a follow-up, use previous context
         elif any(word in message_lower for word in ['explain', 'more', 'details', 'elaborate', 'expand', 'long', 'full', 'in depth']) or any(fw in message_lower for fw in followup_words):
@@ -978,9 +989,21 @@ def chat():
             context_message += user_message
             response = generate_botanical_response_with_memory(context_message, chat_sessions[session_id])
             typing_delay = random.uniform(1, 2)
-        # Botanical question
+        # Botanical question (with typo correction)
         elif is_botanical_question(user_message):
-            response = generate_botanical_response_with_memory(user_message, chat_sessions[session_id])
+            # Try to auto-correct a single close botanical word for downstream processing
+            corrected = get_corrected_botanical_word(user_message)
+            if corrected and corrected not in user_message.lower():
+                # Replace the closest word in the message with the corrected botanical word
+                words = user_message.split()
+                for i, word in enumerate(words):
+                    if difflib.get_close_matches(word.lower(), [corrected], n=1, cutoff=0.8):
+                        words[i] = corrected
+                        break
+                corrected_message = ' '.join(words)
+                response = generate_botanical_response_with_memory(corrected_message, chat_sessions[session_id])
+            else:
+                response = generate_botanical_response_with_memory(user_message, chat_sessions[session_id])
             typing_delay = random.uniform(1, 2)
         # Irrelevant question (strict, smart, and context-aware response)
         else:
@@ -1091,7 +1114,7 @@ def chat():
         return jsonify({'error': 'An error occurred while processing your message. Please try again.'}), 500
 
 def is_botanical_question(message):
-    """Check if the message is related to plants or botany (expanded and smarter)"""
+    """Check if the message is related to plants or botany (expanded, smarter, typo-tolerant)"""
     botanical_keywords = [
         # Core botanical terms
         'plant', 'flower', 'tree', 'leaf', 'leaves', 'garden', 'gardening', 'botany', 'botanical',
@@ -1119,7 +1142,52 @@ def is_botanical_question(message):
         'holly', 'ivy', 'maple', 'oak', 'pine', 'cedar', 'birch', 'willow', 'elm', 'ash', 'spruce', 'fir',
     ]
     message_lower = message.lower()
-    return any(keyword in message_lower for keyword in botanical_keywords)
+    # Exact match
+    if any(keyword in message_lower for keyword in botanical_keywords):
+        return True
+    # Fuzzy match for each word in message
+    words = message_lower.split()
+    for word in words:
+        close = difflib.get_close_matches(word, botanical_keywords, n=1, cutoff=0.8)
+        if close:
+            return True
+    return False
+
+def get_corrected_botanical_word(message):
+    """Return the closest botanical keyword for any word in the message, or None if not found."""
+    botanical_keywords = [
+        # Core botanical terms
+        'plant', 'flower', 'tree', 'leaf', 'leaves', 'garden', 'gardening', 'botany', 'botanical',
+        'grow', 'growing', 'care', 'water', 'watering', 'soil', 'fertilizer', 'pruning', 'propagate',
+        'succulent', 'cactus', 'herb', 'vegetable', 'fruit', 'seed', 'seeds', 'bloom', 'blooming',
+        'houseplant', 'indoor', 'outdoor', 'photosynthesis', 'chlorophyll', 'roots', 'stem', 'stems',
+        'petal', 'petals', 'pollen', 'pollination', 'species', 'variety', 'cultivar', 'hybrid',
+        'perennial', 'annual', 'biennial', 'evergreen', 'deciduous', 'tropical', 'temperate',
+        'light', 'sunlight', 'shade', 'humidity', 'temperature', 'climate', 'season', 'seasonal',
+        'repot', 'repotting', 'transplant', 'mulch', 'compost', 'organic', 'disease', 'pest',
+        'fungus', 'bacteria', 'virus', 'nutrient', 'nitrogen', 'phosphorus', 'potassium',
+        'photosynthesis', 'respiration', 'transpiration', 'germination', 'phototropism',
+        'orchid', 'rose', 'fern', 'bamboo', 'palm', 'moss', 'algae', 'fungi', 'mushroom',
+        # Common fruits and vegetables
+        'strawberry', 'apple', 'banana', 'grape', 'orange', 'lemon', 'lime', 'blueberry', 'raspberry',
+        'blackberry', 'melon', 'watermelon', 'cantaloupe', 'peach', 'pear', 'plum', 'cherry', 'apricot',
+        'kiwi', 'pineapple', 'mango', 'papaya', 'avocado', 'tomato', 'potato', 'carrot', 'onion', 'lettuce',
+        'spinach', 'broccoli', 'cabbage', 'cauliflower', 'pepper', 'chili', 'bean', 'pea', 'corn', 'squash',
+        'pumpkin', 'zucchini', 'radish', 'turnip', 'beet', 'celery', 'cucumber', 'eggplant', 'garlic', 'ginger',
+        'herbs', 'basil', 'mint', 'oregano', 'thyme', 'sage', 'parsley', 'cilantro', 'dill', 'rosemary',
+        # Other common plant names
+        'sunflower', 'daisy', 'tulip', 'lily', 'iris', 'daffodil', 'marigold', 'pansy', 'begonia', 'azalea',
+        'hydrangea', 'peony', 'camellia', 'gardenia', 'jasmine', 'lavender', 'magnolia', 'hibiscus', 'bougainvillea',
+        'carnation', 'chrysanthemum', 'fuchsia', 'geranium', 'petunia', 'snapdragon', 'zinnia', 'wisteria',
+        'holly', 'ivy', 'maple', 'oak', 'pine', 'cedar', 'birch', 'willow', 'elm', 'ash', 'spruce', 'fir',
+    ]
+    message_lower = message.lower()
+    words = message_lower.split()
+    for word in words:
+        close = difflib.get_close_matches(word, botanical_keywords, n=1, cutoff=0.8)
+        if close:
+            return close[0]
+    return None
 
 def generate_botanical_response_with_memory(message, session):
     """Generate smart botanical responses with conversation memory"""
