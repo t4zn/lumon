@@ -95,108 +95,32 @@
 </h1>
             
             <div class="settings-grid">
-                <!-- Profile Picture -->
-                <div class="setting-item">
-                    <div class="setting-icon">
-    <i class="fas fa-user-circle"></i>
-</div>
-                    <div class="setting-content">
-                        <h3>Profile Picture</h3>
-                        <p>Change your profile photo</p>
-                        <button class="setting-btn placeholder-btn">
-    <i class="fas fa-camera"></i>
-    Upload Photo
-</button>
-                    </div>
-                </div>
-                
-                <!-- Username -->
-                <div class="setting-item">
-                    <div class="setting-icon">
-    <i class="fas fa-user-edit"></i>
-</div>
-                    <div class="setting-content">
-                        <h3>Username</h3>
-                        <p>Update your display name</p>
-                        <button class="setting-btn placeholder-btn">
-    <i class="fas fa-edit"></i>
-    Edit Name
-</button>
-                    </div>
-                </div>
-                
-                <!-- Country -->
-                <div class="setting-item">
-                    <div class="setting-icon">
-    <i class="fas fa-globe"></i>
-</div>
-                    <div class="setting-content">
-                        <h3>Country</h3>
-                        <p>Select your country</p>
-                        <div class="country-dropdown-container">
-                            <button class="setting-btn country-btn" onclick="toggleCountryDropdown()">
-                                <i class="fas fa-flag"></i>
-                                <span id="selected-country">Select Country</span>
-                                <i class="fas fa-chevron-down dropdown-arrow"></i>
-                            </button>
-                            
-                            <div class="country-dropdown" id="country-dropdown">
-                                <div class="country-search">
-                                    <input type="text" id="country-search" placeholder="Search countries..." onkeyup="filterCountries()">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                                <div class="country-list" id="country-list">
-                                    <!-- Countries will be populated by JavaScript -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
                 <!-- Terms & Conditions -->
                 <div class="setting-item">
                     <div class="setting-icon">
-    <i class="fas fa-file-contract"></i>
-</div>
+                        <i class="fas fa-file-contract"></i>
+                    </div>
                     <div class="setting-content">
                         <h3>Terms & Conditions</h3>
                         <p>View our terms of service</p>
                         <button class="setting-btn placeholder-btn">
-    <i class="fas fa-external-link-alt"></i>
-    View Terms
-</button>
+                            <i class="fas fa-external-link-alt"></i>
+                            View Terms
+                        </button>
                     </div>
                 </div>
-                
-                <!-- Change Password -->
-                <div class="setting-item">
-                    <div class="setting-icon">
-    <i class="fas fa-lock"></i>
-</div>
-                    <div class="setting-content">
-                        <h3>Change Password</h3>
-                        <p>Update your account password</p>
-                        <button class="setting-btn placeholder-btn">
-    <i class="fas fa-key"></i>
-    Change Password
-</button>
-                    </div>
-                </div>
-                
-                <!-- Help -->
-                <div class="setting-item">
                 <!-- Logout -->
                 <div class="setting-item logout-item">
                     <div class="setting-icon">
-    <i class="fas fa-sign-out-alt"></i>
-</div>
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
                     <div class="setting-content">
                         <h3>Logout</h3>
                         <p>Sign out of your account</p>
                         <button class="setting-btn logout-btn">
-    <i class="fas fa-power-off"></i>
-    Sign Out
-</button>
+                            <i class="fas fa-power-off"></i>
+                            Sign Out
+                        </button>
                     </div>
                 </div>
             </div>
@@ -212,6 +136,10 @@
     <script src="{{ url_for('static', filename='page_animations.js') }}"></script>
     <script src="{{ url_for('static', filename='countries.js') }}"></script>
     <script src="{{ url_for('static', filename='settings_script.js') }}"></script>
+    <script>
+// Patch: Remove login check for settings actions
+window.isUserAuthenticated = async function() { return true; };
+</script>
     <style>
     .country-option .flag {
       font-size: 1.3em;

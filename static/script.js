@@ -86,9 +86,7 @@ class LumonApp {
         this.sideMenu = document.getElementById('side-menu');
         this.menuOverlay = document.getElementById('menu-overlay');
         this.menuClose = document.getElementById('menu-close');
-        this.continueChat = document.getElementById('continue-chat');
-        this.newChat = document.getElementById('new-chat');
-        this.clearHistory = document.getElementById('clear-history');
+        // Removed: this.continueChat, this.newChat, this.clearHistory
 
         safeAddListener(this.menuBtn, 'click', () => {
             this.openMenu();
@@ -102,19 +100,7 @@ class LumonApp {
             this.closeMenu();
         });
 
-        safeAddListener(this.continueChat, 'click', () => {
-            this.closeMenu();
-        });
-
-        safeAddListener(this.newChat, 'click', () => {
-            this.startNewChat();
-            this.closeMenu();
-        });
-
-        safeAddListener(this.clearHistory, 'click', () => {
-            this.clearChatHistory();
-            this.closeMenu();
-        });
+        // Removed: continueChat, newChat, clearHistory event listeners
 
         // Camera trigger buttons - Fix mobile gallery issue
         safeAddListener(this.cameraTriggerBtn, 'click', () => {

@@ -34,73 +34,10 @@ async function isUserAuthenticated() {
 // Attach all settings button actions based on order in DOM
 window.addEventListener('DOMContentLoaded', function() {
   const settingBtns = document.querySelectorAll('.setting-btn.placeholder-btn');
-  // Button order: [0] Profile Picture, [1] Username, [2] Terms, [3] Password
+  // Only Terms & Conditions remains
   if (settingBtns[0]) {
-    // Profile Picture
-    settingBtns[0].onclick = async function() {
-      if (!(await isUserAuthenticated())) {
-        showToast('Please log in to update your settings.', 'error');
-        return;
-      }
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.onchange = async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const formData = new FormData();
-        formData.append('profile_pic', file);
-        try {
-          const res = await fetch('/api/user/upload_profile_pic', { method: 'POST', body: formData });
-          const data = await res.json();
-          if (data.success) {
-            showToast('Profile photo updated!', 'success');
-          } else {
-            showToast('Failed to update photo', 'error');
-          }
-        } catch {
-          showToast('Network error', 'error');
-        }
-      };
-      input.click();
-    };
-  }
-  if (settingBtns[1]) {
-    // Username
-    settingBtns[1].onclick = async function() {
-      if (!(await isUserAuthenticated())) {
-        showToast('Please log in to update your settings.', 'error');
-        return;
-      }
-      createModal({
-        title: 'Edit Username',
-        inputType: 'text',
-        inputPlaceholder: 'Enter new username',
-        confirmText: 'Save',
-        cancelText: 'Cancel',
-        onConfirm: (username) => {
-          if (!username) return;
-          fetch('/api/user/update_username', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                showToast('Username updated!', 'success');
-              } else {
-                showToast('Failed to update username', 'error');
-              }
-            })
-            .catch(() => showToast('Network error', 'error'));
-        }
-      });
-    };
-  }
-  if (settingBtns[2]) {
     // Terms
-    settingBtns[2].onclick = function() {
+    settingBtns[0].onclick = function() {
       createModal({
         title: 'Terms & Conditions',
         content: `<div class='lumon-terms-content'>
@@ -119,42 +56,16 @@ window.addEventListener('DOMContentLoaded', function() {
       });
     };
   }
-  if (settingBtns[3]) {
-    // Password
-    settingBtns[3].onclick = async function() {
-      if (!(await isUserAuthenticated())) {
-        showToast('Please log in to update your settings.', 'error');
-        return;
+  // Logout button
+  const logoutBtn = document.querySelector('.logout-btn');
+  if (logoutBtn) {
+    logoutBtn.onclick = async function() {
+      try {
+        await fetch('/api/logout', { method: 'POST' });
+        window.location.href = '/';
+      } catch {
+        window.location.href = '/';
       }
-      createModal({
-        title: 'Change Password',
-        confirmText: 'Save',
-        cancelText: 'Cancel',
-        inputs: [
-          { type: 'password', placeholder: 'Enter old password' },
-          { type: 'password', placeholder: 'Enter new password' }
-        ],
-        onConfirm: (oldPassword, newPassword) => {
-          if (!oldPassword || !newPassword) {
-            showToast('Both fields are required', 'error');
-            return;
-          }
-          fetch('/api/user/update_password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
-          })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                showToast('Password updated!', 'success');
-              } else {
-                showToast(data.error || 'Failed to update password', 'error');
-              }
-            })
-            .catch(() => showToast('Network error', 'error'));
-        }
-      });
     };
   }
 });
@@ -345,10 +256,6 @@ function selectCountry(country) {
   selectedCountrySpan.textContent = country;
   countryDropdown.style.display = 'none';
   (async () => {
-    if (!(await isUserAuthenticated())) {
-      showToast('Please log in to update your settings.', 'error');
-      return;
-    }
     // Save to backend
     fetch('/api/user/update_country', {
       method: 'POST',
