@@ -166,10 +166,6 @@ class LumonApp {
             this.sendTextMessage();
         });
         
-        safeAddListener(this.attachBtn, 'click', () => {
-            this.toggleAttachOptions();
-        });
-        
         // Suggestion clicks
         document.querySelectorAll('.suggestion').forEach(suggestion => {
             suggestion.addEventListener('click', () => {
@@ -640,34 +636,7 @@ class LumonApp {
         }
     }
     
-    toggleAttachOptions() {
-        if (!this.attachOptions) return;
-        
-        const isVisible = this.attachOptions.style.display === 'block';
-        
-        if (isVisible) {
-            this.hideAttachOptions();
-        } else {
-            this.showAttachOptions();
-        }
-    }
-    
-    showAttachOptions() {
-        if (!this.attachOptions) return;
-        this.attachOptions.style.display = 'block';
-        this.attachBtn.classList.add('active');
-        
-        // Auto-hide after image selection or 5 seconds
-        setTimeout(() => {
-            this.hideAttachOptions();
-        }, 5000);
-    }
-    
-    hideAttachOptions() {
-        if (!this.attachOptions) return;
-        this.attachOptions.style.display = 'none';
-        this.attachBtn.classList.remove('active');
-    }
+    // Removed all attach-btn related logic
     
     async sendTextMessage() {
         const message = this.textInput.value.trim();

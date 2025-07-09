@@ -16,8 +16,6 @@ class LumonApp {
         this.chatContainer = document.getElementById('chat-container');
         this.textInput = document.getElementById('text-input');
         this.sendBtn = document.getElementById('send-btn');
-        this.attachBtn = document.getElementById('attach-btn');
-        this.attachOptions = document.getElementById('attach-options');
         this.loadingOverlay = document.getElementById('loading-overlay');
         
         // Menu elements
@@ -89,11 +87,6 @@ class LumonApp {
         
         if (this.sendBtn) {
             this.sendBtn.addEventListener('click', () => this.sendMessage());
-        }
-        
-        // Attach button
-        if (this.attachBtn) {
-            this.attachBtn.addEventListener('click', () => this.toggleAttachOptions());
         }
         
         // Camera and gallery buttons
