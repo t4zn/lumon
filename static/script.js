@@ -558,7 +558,7 @@ class LumonApp {
             const formData = new FormData();
             formData.append('image', file);
 
-            const response = await fetch('/predict', {
+            const response = await fetch('https://lumon-e85s.onrender.com/predict', {
                 method: 'POST',
                 body: formData
             });
