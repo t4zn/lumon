@@ -266,7 +266,7 @@ def identify_plant_with_plantnet(image_path):
                 'api-key': PLANTNET_API_KEY,
                 'include-related-images': 'false'
             }
-            response = requests.post(url, files=files, params=params, timeout=10)
+            response = requests.post(url, files=files, params=params, timeout=30)
         logging.info(f"PlantNet v2 response status: {response.status_code}")
         logging.info(f"PlantNet v2 response body: {response.text}")
         if response.status_code == 200:
