@@ -1,4 +1,4 @@
-// Lumon Plant Identifier - Mobile Chatbot Interface
+// Lumon AI Plant Expert - Mobile Chatbot Interface
 
 class LumonApp {
     constructor() {

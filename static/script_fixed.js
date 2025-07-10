@@ -1,4 +1,4 @@
-// Lumon Plant Identifier - Fixed Implementation
+// Lumon AI Plant Expert - Fixed Implementation
 
 class LumonApp {
     constructor() {

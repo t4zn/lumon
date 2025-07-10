@@ -16,7 +16,7 @@ To build APK:
 App Features:
 - AI plant identification with millions of species
 - Real-time plant analysis using machine learning
-- Camera integration with live photo upload
+- Chat interface with AI-powered botanical responses
 - Intelligent chatbot for plant care questions
 - Toxicity warnings and safety information
 - Scientific plant data and care advice

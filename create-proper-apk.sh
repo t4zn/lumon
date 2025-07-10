@@ -155,7 +155,7 @@ cat > Lumon-android/app/src/main/assets/www/index.html << 'EOF'
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumon - Plant Identifier</title>
+    <title>Lumon - AI Plant Expert</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); }
@@ -183,7 +183,7 @@ cat > Lumon-android/app/src/main/assets/www/index.html << 'EOF'
             <div class="message bot-message">
                 <div>Hello! I'm Lumon, your AI plant expert. 🌱</div>
                 <div style="margin-top: 10px;">I can help you:</div>
-                <div>📸 Identify plants from photos</div>
+                <div>💬 Chat about plants</div>
                 <div>💬 Answer questions about plant care</div>
                 <div>🔍 Provide toxicity and safety information</div>
             </div>
@@ -191,7 +191,7 @@ cat > Lumon-android/app/src/main/assets/www/index.html << 'EOF'
         
         <div class="input-area">
             <input type="file" id="photoInput" accept="image/*" style="display: none;">
-            <button class="camera-btn" onclick="document.getElementById('photoInput').click()">📷</button>
+            <button class="camera-btn" onclick="document.getElementById('photoInput').click()">💬</button>
             <input type="text" id="textInput" placeholder="Ask about plants..." onkeypress="if(event.key==='Enter') sendMessage()">
             <button onclick="sendMessage()">Send</button>
         </div>

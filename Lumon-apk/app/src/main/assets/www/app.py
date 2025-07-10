@@ -544,11 +544,11 @@ def generate_contextual_botanical_response(message):
     
     # Location/habitat questions
     if 'where' in message_lower or ('found' in message_lower and has_question_word):
-        return "Most houseplants originate from tropical rainforests (pothos, monstera), arid regions (succulents, cacti), or temperate forests (ferns). For specific habitat information, upload a photo of your plant and I'll tell you exactly where it's native to!"
+        return "Most houseplants originate from tropical rainforests (pothos, monstera), arid regions (succulents, cacti), or temperate forests (ferns). Ask me about specific plants and I'll tell you where they're native to!"
         
     # Plant identification questions  
     elif any(phrase in message_lower for phrase in ['what is', 'what plant', 'identify', 'what type', 'name of', 'species']):
-        return "I can identify plants from photos! Upload a clear image showing leaves, stems, and any flowers. I'll analyze the botanical features and provide the plant name with detailed care information."
+        return "I can help you learn about plants! Ask me about specific plant species, care requirements, or botanical information. I'll provide detailed information about the plant you're interested in."
     
     # Care and growing questions
     elif any(word in message_lower for word in ['care', 'grow', 'growing', 'raise', 'maintain', 'keep']):
@@ -571,7 +571,7 @@ def generate_contextual_botanical_response(message):
     
     # Toxicity and safety questions
     elif any(word in message_lower for word in ['harmful', 'toxic', 'poisonous', 'dangerous', 'safe', 'eat', 'edible', 'poison', 'toxicity']):
-        return "Many common houseplants can be toxic to humans and pets if ingested. Plants like pothos, philodendron, and peace lilies contain calcium oxalate crystals that cause irritation. Always keep plants away from children and pets, and upload a photo for specific toxicity information about your plant."
+        return "Many common houseplants can be toxic to humans and pets if ingested. Plants like pothos, philodendron, and peace lilies contain calcium oxalate crystals that cause irritation. Always keep plants away from children and pets. Ask me about specific plants for toxicity information."
     
     # Problem/health questions  
     elif any(word in message_lower for word in ['dying', 'dead', 'yellow', 'brown', 'sick', 'problem', 'wrong', 'help']):
@@ -619,7 +619,7 @@ def generate_contextual_botanical_response(message):
     
     # Default for unmatched queries
     else:
-        return "I can help with plant care, identification, problems, and botanical questions. Try asking about watering, light, toxicity, pests, or upload a photo for plant identification. What plant topic interests you?"
+        return "I can help with plant care, identification, problems, and botanical questions. Try asking about watering, light, toxicity, pests, or specific plant species. What plant topic interests you?"
 
 def get_plant_care_advice(plant_name):
     """Generate specific care tips for identified plants"""

@@ -203,9 +203,10 @@ if (termsBtn) {
         <h3>Welcome to Lumon!</h3>
         <p>By using this app, you agree to the following terms:</p>
         <ul>
-          <li><b>Privacy:</b> Your personal data is stored securely and never sold to third parties. You may delete your account at any time.</li>
-          <li><b>Content:</b> You are responsible for the content you upload or generate. Do not upload illegal, offensive, or copyrighted material without permission.</li>
+          <li><b>Privacy:</b> Your personal data and chat conversations are stored securely and never sold to third parties. You may delete your account at any time.</li>
+          <li><b>Content:</b> You are responsible for the content you share in chat. Do not share illegal, offensive, or copyrighted material without permission.</li>
           <li><b>Usage:</b> You agree not to misuse the app, attempt unauthorized access, or disrupt service for others.</li>
+          <li><b>AI Responses:</b> Lumon provides AI-powered botanical advice. While we strive for accuracy, information should not replace professional consultation.</li>
           <li><b>Changes:</b> Lumon reserves the right to update these terms and will notify users of significant changes.</li>
           <li><b>Disclaimer:</b> This app is provided as-is, without warranties. Use at your own risk.</li>
         </ul>
